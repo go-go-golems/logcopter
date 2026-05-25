@@ -637,7 +637,7 @@ This step also changed the reMarkable bundle shape: `tasks.md` is now a first-cl
 
 **Inferred user intent:** The user wants the design to become directly executable: clear field-type choice, concrete syntax examples, and a task breakdown that can guide implementation and review.
 
-**Commit (code):** N/A — documentation-only update.
+**Commit (docs):** `d2d88f1b50739ee5a4cd50aa2b8f4a953a619108` — "Add TypeKeyValue area override plan"
 
 ### What I did
 
@@ -652,6 +652,9 @@ This step also changed the reMarkable bundle shape: `tasks.md` is now a first-cl
 - Rewrote `tasks.md` into ten granular phases with implementation tasks.
 - Updated the design guide to point readers at `tasks.md` as the execution checklist.
 - Updated the index with the `TypeKeyValue` conclusion.
+- Ran `docmgr doctor --ticket LOGCOPTER-001 --stale-after 30` successfully.
+- Committed the documentation update.
+- Uploaded a forced reMarkable bundle that includes the design guide, `tasks.md`, diary, and source proposal.
 
 ### Why
 
@@ -671,6 +674,15 @@ fields.New(
 ```
 
 The task list now breaks the implementation into small phases covering scaffold, runtime primitives, manager, wrapper API, output helpers, generator, Glazed key-value support, Glazed logging integration, validation, docs/examples, and release readiness.
+
+Validation and upload worked:
+
+```text
+docmgr doctor --ticket LOGCOPTER-001 --stale-after 30
+# ✅ All checks passed
+
+OK: uploaded LOGCOPTER-001 Initial Logcopter Implementation Guide.pdf -> /ai/2026/05/25/LOGCOPTER-001
+```
 
 ### What didn't work
 
