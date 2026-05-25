@@ -65,3 +65,16 @@ Added explicit logcopter-only config/profile file support to the design
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Records Step 8 before implementation begins
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Adds granular tasks for explicit logcopter profile files
 
+
+## 2026-05-25
+
+Phase 0 scaffold: renamed module and replaced placeholder command with logcopter-gen scaffold
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/README.md — Initial project README
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/cmd/logcopter-gen/main.go — Generator command scaffold with planned flags
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/go.mod — Module renamed to github.com/go-go-golems/logcopter
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 9 scaffold diary
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Phase 0 checklist progress
+

@@ -809,3 +809,97 @@ logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
 ```
+
+## Step 9: Phase 0 scaffold and module rename
+
+I started executing the granular implementation checklist with Phase 0. This step turns the repository from a `go-go-golems/XXX` template into a named `github.com/go-go-golems/logcopter` module and replaces the placeholder command with a `logcopter-gen` command scaffold.
+
+The generator is not implemented yet, but the binary now has the planned flags and a working `-help` path. This gives later generator work a real command entrypoint without mixing scaffold changes into generator logic.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Begin implementing the task list in order and commit at natural boundaries.
+
+**Inferred user intent:** The user wants small, reviewable implementation commits with diary context for each phase.
+
+**Commit (code):** pending at the time this step text was written.
+
+### What I did
+
+- Renamed the module in `go.mod` from `github.com/go-go-golems/XXX` to `github.com/go-go-golems/logcopter`.
+- Moved `cmd/XXX/main.go` to `cmd/logcopter-gen/main.go`.
+- Replaced the empty command with a scaffolded `logcopter-gen` CLI that declares the planned flags.
+- Replaced the template README with a short project README and planned usage examples.
+- Updated Makefile and GoReleaser references from `XXX` to `logcopter-gen` / `logcopter` paths.
+- Ran `go mod tidy`.
+- Ran `go test ./...`.
+- Ran `go run ./cmd/logcopter-gen -help` to verify the scaffolded help path.
+- Marked completed Phase 0 tasks in `tasks.md`.
+
+### Why
+
+The repository was still a template, so meaningful runtime work needs a clean module path, command name, and baseline test state first.
+
+### What worked
+
+Validation passed:
+
+```text
+?   	github.com/go-go-golems/logcopter/cmd/logcopter-gen	[no test files]
+?   	github.com/go-go-golems/logcopter/pkg	[no test files]
+```
+
+The generator help path prints the planned flags, including `-logcopter-import`, `-strip-prefix`, `-area-prefix`, `-out`, `-var`, `-include-main`, `-areas-out`, `-check`, and `-dry-run`.
+
+### What didn't work
+
+N/A. The scaffold build and test passed.
+
+### What I learned
+
+Keeping `logcopter-gen` as a standard-library `flag` command for the initial scaffold avoids adding Cobra before it is needed. The generator can stay small and dependency-light unless later requirements justify Cobra.
+
+### What was tricky to build
+
+The `-help` behavior needed explicit handling because `flag.ErrHelp` should exit successfully, not as a generator error. I added an `errors.Is(err, flag.ErrHelp)` check in the scaffold.
+
+### What warrants a second pair of eyes
+
+- Confirm whether GoReleaser's `project_name` should be `logcopter` while the binary is `logcopter-gen`, or whether the release artifact should stay generator-focused.
+- Confirm whether `Makefile bump-glazed` should still fetch Clay in this repo after the dependency cleanup direction.
+
+### What should be done in the future
+
+- Add `zerolog` when implementing the runtime package.
+- Add `go/packages` when implementing package discovery in the generator.
+- Replace the scaffold's `generator implementation is not complete yet` error during Phase 5.
+
+### Code review instructions
+
+- Review `go.mod` first for the module rename.
+- Review `cmd/logcopter-gen/main.go` for the scaffolded flags and help handling.
+- Review `README.md` for the new project description.
+- Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
+go test ./...
+go run ./cmd/logcopter-gen -help
+```
+
+### Technical details
+
+Files changed in this step:
+
+```text
+logcopter/go.mod
+logcopter/README.md
+logcopter/Makefile
+logcopter/.goreleaser.yaml
+logcopter/cmd/logcopter-gen/main.go
+logcopter/cmd/XXX/main.go (removed)
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
+```

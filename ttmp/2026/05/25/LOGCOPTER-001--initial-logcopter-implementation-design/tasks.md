@@ -18,15 +18,15 @@
 
 ## Phase 0 — Repository rename and baseline scaffold
 
-- [ ] Rename module from `github.com/go-go-golems/XXX` to `github.com/go-go-golems/logcopter`.
-- [ ] Rename `cmd/XXX` to `cmd/logcopter-gen`.
-- [ ] Replace template README with a short logcopter README.
-- [ ] Decide minimum Go/toolchain version for the module.
+- [x] Rename module from `github.com/go-go-golems/XXX` to `github.com/go-go-golems/logcopter`.
+- [x] Rename `cmd/XXX` to `cmd/logcopter-gen`.
+- [x] Replace template README with a short logcopter README.
+- [x] Decide minimum Go/toolchain version for the module.
 - [ ] Add runtime dependency on `github.com/rs/zerolog`.
 - [ ] Add generator dependency on `golang.org/x/tools/go/packages`.
 - [ ] Add test dependency such as `github.com/stretchr/testify` if used.
-- [ ] Run `go mod tidy`.
-- [ ] Run `go test ./...` to establish a clean scaffold baseline.
+- [x] Run `go mod tidy`.
+- [x] Run `go test ./...` to establish a clean scaffold baseline.
 
 ## Phase 1 — Runtime level and area primitives
 
