@@ -19,5 +19,8 @@ jobs:
           go-version-file: go.mod
           cache: true
       -
+        name: Check generated logcopter example files
+        run: go run ./cmd/logcopter-gen -area-prefix lib.ble -strip-prefix github.com/go-go-golems/logcopter/examples/library-prefix -check ./examples/library-prefix/...
+      -
         name: Run unit tests
         run: go test ./...
