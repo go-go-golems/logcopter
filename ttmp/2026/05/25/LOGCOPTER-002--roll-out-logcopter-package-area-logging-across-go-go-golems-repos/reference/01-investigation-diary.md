@@ -465,3 +465,69 @@ Commit:
 ```text
 69733764289f9939cb0cbccad71b76b7466c59d8 Adopt logcopter package loggers
 ```
+
+## Step 5: Upload updated LOGCOPTER-002 bundle after Glazed transition
+
+After committing the Glazed transition and recording the diary, I uploaded the refreshed LOGCOPTER-002 bundle to reMarkable.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Work on the glazed transition, use the go tool + go generate ./... pattern. Add tasks to the ticket. Then work on it, commit at appropriate intervals, keep a detailed didary as syou work"
+
+**Assistant interpretation:** Keep the ticket deliverable current after implementation work.
+
+**Inferred user intent:** The user wants the ticket documentation and external reading bundle to track the code changes as they happen.
+
+**Commit (code):** N/A — documentation delivery step.
+
+### What I did
+
+- Uploaded the updated ticket bundle to reMarkable with `--force`.
+
+### Why
+
+The previous bundle predated the Glazed implementation work. The refreshed bundle now includes the Step 4 diary and completed Phase 1 checklist.
+
+### What worked
+
+The upload succeeded:
+
+```text
+OK: uploaded LOGCOPTER-002 Cross Repository Logcopter Rollout Guide.pdf -> /ai/2026/05/25/LOGCOPTER-002
+```
+
+### What didn't work
+
+N/A.
+
+### What I learned
+
+N/A.
+
+### What was tricky to build
+
+N/A.
+
+### What warrants a second pair of eyes
+
+N/A.
+
+### What should be done in the future
+
+Continue with Pinocchio rollout once the Glazed commit is reviewed or made available to downstream modules.
+
+### Code review instructions
+
+Review the latest reMarkable bundle or local diary before starting Phase 2.
+
+### Technical details
+
+Uploaded files:
+
+```text
+index.md
+tasks.md
+changelog.md
+design-doc/01-cross-repository-logcopter-rollout-analysis-and-implementation-guide.md
+reference/01-investigation-diary.md
+```
