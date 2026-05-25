@@ -741,7 +741,7 @@ This step also starts the implementation execution phase requested by the user. 
 
 **Inferred user intent:** The user wants reusable cross-application logging profiles and wants the planning ticket to transition into actual implementation work.
 
-**Commit (docs):** pending at the time this step text was written.
+**Commit (docs):** `9fc46059ef282a99c520432df75a69be50365b02` — "Add logcopter profile config design"
 
 ### What I did
 
@@ -824,7 +824,7 @@ The generator is not implemented yet, but the binary now has the planned flags a
 
 **Inferred user intent:** The user wants small, reviewable implementation commits with diary context for each phase.
 
-**Commit (code):** pending at the time this step text was written.
+**Commit (code):** `3a8fa1a0e0633247496961bb8d8925c1561a2ecb` — "Scaffold logcopter module and generator command"
 
 ### What I did
 
@@ -918,7 +918,7 @@ This phase also removes the placeholder `pkg/doc.go` package and introduces the 
 
 **Inferred user intent:** Build the runtime incrementally, with tests and focused commits.
 
-**Commit (code):** pending at the time this step text was written.
+**Commit (code):** `fb7de48a3767314e72e98a183b1fa72647f9e702` — "Implement logcopter level and area primitives"
 
 ### What I did
 
@@ -1012,7 +1012,7 @@ The implementation now supports no-op pre-configuration package loggers, atomic 
 
 **Inferred user intent:** Build the core runtime behavior before moving to output helpers, generator, and Glazed integration.
 
-**Commit (code):** pending at the time this step text was written.
+**Commit (code):** `7bdc4916b81eafca288407b689fe48a151ab4fdb` — "Implement reload-aware logcopter manager"
 
 ### What I did
 
@@ -1131,7 +1131,7 @@ The generator now loads packages with `go/packages`, derives areas from package 
 
 **Inferred user intent:** Build the smallest useful vertical slices and keep committing at boundaries.
 
-**Commit (code):** pending at the time this step text was written.
+**Commit (code):** `6c5a856f7c528c98073559401b9ededd8c1c692a` — "Implement logcopter generator first pass"
 
 ### What I did
 
