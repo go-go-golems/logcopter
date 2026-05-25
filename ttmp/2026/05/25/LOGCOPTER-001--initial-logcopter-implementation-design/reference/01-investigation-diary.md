@@ -726,3 +726,86 @@ Ticket files changed in this step:
 /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
 /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
 ```
+
+## Step 8: Add explicit logcopter profile files and start implementation execution
+
+I updated the design to support explicit logcopter-only config/profile files via a `--log-config` flag. This is separate from an application's normal Glazed config file and is intended for reusable logging profiles that can be shared across applications.
+
+This step also starts the implementation execution phase requested by the user. The immediate implementation plan is to keep working through `tasks.md` in order, committing at natural boundaries: documentation updates, scaffold/module rename, runtime primitives, manager/wrapper, generator, and then Glazed integration.
+
+### Prompt Context
+
+**User prompt (verbatim):** "we should also be able to specific an explicit config file just for logcopter configuration, not just a section within the applications config file, since it will make it easier to configure certain logging profiles across applications. Update document. then work on the tasks one by one, committing at appropriate intervals, keeping a detailed diary"
+
+**Assistant interpretation:** Update LOGCOPTER-001 to include explicit logcopter-only config/profile files, then begin executing the granular task list with focused commits and diary updates.
+
+**Inferred user intent:** The user wants reusable cross-application logging profiles and wants the planning ticket to transition into actual implementation work.
+
+**Commit (docs):** pending at the time this step text was written.
+
+### What I did
+
+- Added `LogConfigFiles []string` to the recommended Glazed `LoggingSettings` shape.
+- Added `log-config` as a recommended repeatable `fields.TypeStringList` field.
+- Added root persistent flag guidance for `--log-config`.
+- Documented reusable profile file examples:
+  - application-style `logging:` wrapper;
+  - direct logcopter-only profile shape.
+- Documented merge order:
+  1. built-in logging defaults;
+  2. normal application config logging section;
+  3. explicit `--log-config` files, in command-line order;
+  4. direct CLI flags.
+- Updated phase tasks to include explicit config files and profile-file tests.
+
+### Why
+
+Application config sections are good for app-local defaults, but logging profiles are often cross-cutting. A shared `~/.config/logcopter/profiles/dev-ui.yaml` or `./logging/local-debug.yaml` lets the same package-area levels be reused across tools.
+
+### What worked
+
+The design now supports all three configuration paths:
+
+```bash
+myapp --log-area app.view:debug
+myapp --log-config ~/.config/logcopter/profiles/dev-ui.yaml
+myapp --config-file app.yaml --log-config logging/debug.yaml --log-area app.http=trace
+```
+
+### What didn't work
+
+N/A. This was a documentation update before implementation.
+
+### What I learned
+
+The explicit logging profile file should be handled by Glazed's existing logging initialization, not by logcopter's runtime package. The runtime should only receive the merged `logcopter.Config`.
+
+### What was tricky to build
+
+The subtle part is precedence: explicit logging profiles should override normal app config defaults, but direct CLI flags must still win. The document now states that order explicitly so tests can lock it down.
+
+### What warrants a second pair of eyes
+
+- Confirm whether direct profile files should support both `logging:`-wrapped and direct shapes in the first release.
+- Confirm whether missing `--log-config` files should always fail or if optional profile files are needed later.
+
+### What should be done in the future
+
+- Add merge-order tests when implementing Glazed logging integration.
+- Include sample shared profiles in documentation/examples.
+
+### Code review instructions
+
+- Review the design guide around `Explicit logcopter config/profile files`.
+- Review Phase 7 and Phase 9 in `tasks.md` for the new explicit config-file tasks.
+- Validate the ticket with `docmgr doctor --ticket LOGCOPTER-001 --stale-after 30`.
+
+### Technical details
+
+Files updated in this step:
+
+```text
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/design-doc/01-initial-logcopter-implementation-guide.md
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
+```

@@ -63,6 +63,7 @@ The design/research deliverable is complete. Implementation has not started. The
 - Normal filtering should use per-area child logger levels, not `zerolog.SetGlobalLevel`.
 - Logcopter should not ship a Glazed adapter package; Glazed's existing `pkg/cmds/logging` section and initialization should be updated in-place to configure logcopter.
 - Glazed area overrides should use `fields.TypeKeyValue`, accepting `--log-area app.view:debug` and preferably `--log-area app.view=debug` after a small parser improvement.
+- Glazed logging setup should also accept explicit logcopter-only profile files via `--log-config`, merged after normal app config and before direct CLI overrides.
 - Pinocchio demonstrates why an early logging initializer is useful before dynamic command discovery.
 
 ## Topics

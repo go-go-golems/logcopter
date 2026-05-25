@@ -105,17 +105,20 @@
 ## Phase 7 — In-place Glazed logging integration
 
 - [ ] Update `glazed/pkg/cmds/logging/section.go`.
+- [ ] Add `log-config` as a repeatable string-list field for explicit logcopter-only config/profile files.
 - [ ] Add `log-area` as a `fields.TypeKeyValue` field.
 - [ ] Add or preserve canonical config support for `logging.areas` map.
 - [ ] Add `strict-log-areas` boolean field.
-- [ ] Update `LoggingSettings` with `LogAreas map[string]string`, `Areas map[string]string`, and `StrictAreas bool`.
-- [ ] Update `AddLoggingSectionToRootCommand` with manual persistent flags for `--log-area` and `--strict-log-areas`.
-- [ ] Update `InitLoggerFromCobra` to read `--log-area` through the same key-value parser.
+- [ ] Update `LoggingSettings` with `LogConfigFiles []string`, `LogAreas map[string]string`, `Areas map[string]string`, and `StrictAreas bool`.
+- [ ] Update `AddLoggingSectionToRootCommand` with manual persistent flags for `--log-config`, `--log-area`, and `--strict-log-areas`.
+- [ ] Update `InitLoggerFromCobra` to read `--log-config` and `--log-area` through the same code paths as section parsing.
 - [ ] Update `SetupLoggingFromValues` / `GetLoggingSettings` to normalize section values.
+- [ ] Implement deterministic merge order: defaults, app logging section, explicit logcopter config files in order, direct CLI flags.
+- [ ] Support both `logging:`-wrapped and direct logcopter-only profile file shapes.
 - [ ] Update `InitLoggerFromSettings` to configure logcopter's default manager.
 - [ ] Stop using `zerolog.SetGlobalLevel` as the normal filtering mechanism when logcopter is active.
-- [ ] Update `InitEarlyLoggingFromArgs` to preserve and parse area override flags before command discovery.
-- [ ] Add Glazed unit tests for CLI flags, parsed values, config map values, early logging, and strict area validation.
+- [ ] Update `InitEarlyLoggingFromArgs` to preserve and parse explicit log config and area override flags before command discovery.
+- [ ] Add Glazed unit tests for CLI flags, parsed values, explicit log config files, config map values, early logging, and strict area validation.
 
 ## Phase 8 — Cross-repository validation
 
@@ -134,8 +137,9 @@
 - [ ] Add `examples/library-prefix` for reusable package prefixes.
 - [ ] Add `examples/glazed-cli` or a Glazed docs example showing in-place Glazed logging setup.
 - [ ] Update `glazed/pkg/doc/topics/logging-section.md` with area override examples.
-- [ ] Document CLI examples: `--log-area app.view:debug` and `--log-area app.view=debug`.
-- [ ] Document YAML examples using `logging.areas`.
+- [ ] Document CLI examples: `--log-area app.view:debug`, `--log-area app.view=debug`, and `--log-config ~/.config/logcopter/profiles/dev.yaml`.
+- [ ] Document YAML examples using application `logging.areas`.
+- [ ] Document standalone logcopter profile files with both `logging:`-wrapped and direct shapes.
 - [ ] Document `Raw()` reload caveat.
 - [ ] Document global zerolog level interaction.
 

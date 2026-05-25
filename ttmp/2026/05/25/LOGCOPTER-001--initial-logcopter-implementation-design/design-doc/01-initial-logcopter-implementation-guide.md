@@ -733,6 +733,11 @@ type LoggingSettings struct {
     LogFile     string            `glazed:"log-file"`
     LogToStdout bool              `glazed:"log-to-stdout"`
 
+    // Explicit logcopter-only config/profile files. These are useful for
+    // sharing logging profiles across applications without editing each
+    // application config file.
+    LogConfigFiles []string       `glazed:"log-config" yaml:"log_config" json:"log_config"`
+
     // CLI-friendly repeatable key-value field:
     //   --log-area app.view:debug --log-area app.db:warn
     // After a small TypeKeyValue parser improvement, also accept:
@@ -753,6 +758,12 @@ type LoggingSettings struct {
 Recommended section fields:
 
 ```go
+fields.New(
+    "log-config",
+    fields.TypeStringList,
+    fields.WithHelp("Path to a logcopter-only YAML config/profile file; repeatable and merged before CLI overrides"),
+    fields.WithDefault([]string{}),
+)
 fields.New(
     "log-area",
     fields.TypeKeyValue,
@@ -789,6 +800,50 @@ logging:
     - app.db:warn
 ```
 
+### Explicit logcopter config/profile files
+
+Glazed should also allow an explicit logcopter-only config file, separate from the application's main config file. This makes reusable logging profiles possible across applications: for example, a developer can keep one profile that turns on trace logging for shared libraries and use it with `pinocchio`, `geppetto`, or future tools without copying the same `logging.areas` block into every app config.
+
+Recommended CLI shape:
+
+```bash
+myapp --log-config ~/.config/logcopter/profiles/dev-ui.yaml
+myapp --log-config ~/.config/logcopter/profiles/dev-ui.yaml --log-area app.http:trace
+myapp --log-config ./logging/base.yaml --log-config ./logging/local-debug.yaml
+```
+
+Recommended profile file shape accepts either a top-level `logging` document, which mirrors application config files:
+
+```yaml
+logging:
+  log-level: info
+  log-format: text
+  areas:
+    app.view: debug
+    app.view.render: trace
+    lib.protocol: debug
+```
+
+or a direct logcopter config document, which is convenient when the file is explicitly logcopter-only:
+
+```yaml
+level: info
+format: text
+areas:
+  app.view: debug
+  app.view.render: trace
+  lib.protocol: debug
+```
+
+Merge order should be deterministic and easy to explain:
+
+1. built-in logging defaults;
+2. logging section from the application's normal Glazed config files;
+3. explicit `--log-config` files, in command-line order;
+4. direct CLI flags such as `--log-level` and `--log-area`.
+
+This gives shared profiles enough power to override normal app defaults, while still letting an invocation override a profile from the command line. Invalid explicit log config files should fail logging initialization with the filename in the error. Missing files should fail unless a future option explicitly marks them optional.
+
 Implementation note: current Glazed `TypeKeyValue` parsing is colon-based (`key:value`). Add support for `key=value` as a small compatibility improvement because command-line users commonly expect `--flag key=value` for map-style flags. The parser should accept both separators, reject strings that contain neither, and include the offending item in the error. Do not push this parsing complexity into logcopter. Logcopter should receive a plain `logcopter.Config` with `Areas map[string]string`.
 
 ### Root command flags
@@ -802,6 +857,7 @@ func AddLoggingSectionToRootCommand(rootCmd *cobra.Command, appName string) erro
     rootCmd.PersistentFlags().String("log-format", "text", "Log format (json, text)")
     rootCmd.PersistentFlags().Bool("with-caller", false, "Log caller information")
     rootCmd.PersistentFlags().Bool("log-to-stdout", false, "Log to stdout even when log-file is set")
+    rootCmd.PersistentFlags().StringSlice("log-config", nil, "Logcopter-only YAML config/profile file; repeatable and merged before CLI overrides")
     rootCmd.PersistentFlags().StringSlice("log-area", nil, "Area log level override in area:level or area=level form; repeatable")
     rootCmd.PersistentFlags().Bool("strict-log-areas", false, "Fail when config references unknown log areas")
     return nil
@@ -828,17 +884,22 @@ func InitLoggerFromSettings(s *LoggingSettings) error {
         base = base.With().Caller().Logger()
     }
 
-    areas, err := normalizeAreas(s.Areas, s.LogAreas)
+    fileCfg, err := loadLogcopterConfigFiles(s.LogConfigFiles)
+    if err != nil {
+        return err
+    }
+
+    areas, err := normalizeAreas(fileCfg.Areas, s.Areas, s.LogAreas)
     if err != nil {
         return err
     }
 
     return logcopter.Configure(base, logcopter.Config{
-        Level:       s.LogLevel,
-        Format:      s.LogFormat,
-        Caller:      s.WithCaller,
+        Level:       firstNonEmpty(s.LogLevel, fileCfg.Level),
+        Format:      firstNonEmpty(s.LogFormat, fileCfg.Format),
+        Caller:      s.WithCaller || fileCfg.Caller,
         Areas:       areas,
-        StrictAreas: s.StrictAreas,
+        StrictAreas: s.StrictAreas || fileCfg.StrictAreas,
     })
 }
 ```
@@ -849,6 +910,8 @@ This should replace normal use of `zerolog.SetGlobalLevel`. If Glazed keeps a gl
 
 Update `glazed/pkg/cmds/logging/init-early.go` so early parsing recognizes the same new flags as the root helper:
 
+- `--log-config path/to/profile.yaml`
+- repeated `--log-config` values, merged in order
 - `--log-area area:level` and `--log-area area=level`
 - repeated or comma-separated `--log-area` values
 - `--strict-log-areas`
@@ -888,6 +951,7 @@ Area-level configuration can come from flags:
 ```bash
 myapp --log-level info --log-area app.view:debug --log-area app.view.render:trace
 myapp --log-level info --log-area app.view=debug,app.db=warn
+myapp --log-config ~/.config/logcopter/profiles/dev-ui.yaml --log-area app.http=trace
 ```
 
 or from config files:
@@ -1036,12 +1100,12 @@ glazed/pkg/doc/topics/logging-section.md
 
 Implement:
 
-- extend `LoggingSettings` with a `fields.TypeKeyValue`-backed `log-area`, canonical config `areas`, and `strict-log-areas`;
-- add persistent root flags for key-value area overrides and strict area validation;
+- extend `LoggingSettings` with explicit `log-config` files, a `fields.TypeKeyValue`-backed `log-area`, canonical config `areas`, and `strict-log-areas`;
+- add persistent root flags for logcopter config files, key-value area overrides, and strict area validation;
 - update `InitLoggerFromSettings()` to configure logcopter's default manager;
-- update `InitLoggerFromCobra()` and `SetupLoggingFromValues()` to normalize `log-area` and `areas` into `logcopter.Config.Areas`;
-- update `InitEarlyLoggingFromArgs()` to parse the new flags before command discovery;
-- document the new CLI and config-file shapes in Glazed docs, including `key:value` and `key=value` examples.
+- update `InitLoggerFromCobra()` and `SetupLoggingFromValues()` to load explicit logcopter profile files and normalize `log-area` and `areas` into `logcopter.Config.Areas`;
+- update `InitEarlyLoggingFromArgs()` to parse `--log-config` and area override flags before command discovery;
+- document the new CLI, explicit logcopter profile file, and config-file shapes in Glazed docs, including `key:value` and `key=value` examples.
 
 Test in Glazed and at least one application such as Pinocchio, because this is now an in-place change to the shared Glazed logging package rather than a separate logcopter adapter.
 
@@ -1075,9 +1139,10 @@ The initial implementation is complete when:
 5. A config can set `app.view.render=trace` while keeping `app.db=warn`.
 6. A logger created before `Configure` observes config applied later.
 7. Calling `Configure` with an invalid area level returns an error and keeps the previous valid state.
-8. Glazed's existing root command logging setup can configure output, format, caller, default level, and area overrides without importing a separate logcopter Glazed adapter package.
-9. `Areas()` returns generated/registered areas.
-10. Documentation clearly states that `Raw()` is not reload-aware after capture.
+8. Glazed's existing root command logging setup can configure output, format, caller, default level, explicit logcopter profile files, and area overrides without importing a separate logcopter Glazed adapter package.
+9. `--log-config` can load a reusable logcopter-only profile file across applications.
+10. `Areas()` returns generated/registered areas.
+11. Documentation clearly states that `Raw()` is not reload-aware after capture.
 
 ## Risks and tradeoffs
 
@@ -1110,6 +1175,17 @@ Mitigation:
 - keep the wrapper minimal;
 - benchmark before adding cache complexity;
 - provide `Raw()` for extremely hot paths with clear reload caveats.
+
+### Explicit logcopter config file precedence
+
+Adding `--log-config` creates another config source, so precedence must be documented and tested. The recommended order is defaults, normal application config, explicit logcopter profile files, then direct CLI flags.
+
+Mitigation:
+
+- implement one merge function with table tests;
+- include filenames in parse errors;
+- keep CLI flags as the highest-precedence source;
+- support both `logging:`-wrapped and direct logcopter profile files only if tests cover both forms.
 
 ### Glazed config map shape
 
