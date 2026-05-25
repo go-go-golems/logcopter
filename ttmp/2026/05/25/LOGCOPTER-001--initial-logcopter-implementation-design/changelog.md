@@ -122,3 +122,28 @@ Phase 5 generator first pass: implemented package loading, area derivation, rend
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 12 generator diary
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Marked generator implementation progress
 
+
+## 2026-05-25
+
+Glazed prerequisite: TypeKeyValue now accepts key=value as well as key:value
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/glazed/pkg/cmds/fields/parse.go — TypeKeyValue parser helper accepts colon and equals separators
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/glazed/pkg/cmds/fields/parse_test.go — Tests for key=value
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 13 Glazed TypeKeyValue parser update
+- key — value
+
+
+## 2026-05-25
+
+Added Markdown-only logcopter help entries and loaded them from the Glaze binary
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/cmd/glaze/main.go — Loads logcopter Markdown docs from workspace checkout
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/doc/topics/logcopter-logging-architecture.md — General architecture guide help entry
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/doc/tutorials/logcopter-package-logging.md — Tutorial help entry
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 14 help docs diary
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Added Phase 6.5 help entry tasks
+

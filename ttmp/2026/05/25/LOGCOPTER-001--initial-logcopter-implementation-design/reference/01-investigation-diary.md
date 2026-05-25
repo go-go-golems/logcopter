@@ -16,6 +16,10 @@ RelatedFiles:
       Note: Documentation change recorded in diary Step 5
     - Path: clay/pkg/init.go
       Note: Code change recorded in diary Step 5
+    - Path: glazed/pkg/cmds/fields/parse.go
+      Note: Step 13 TypeKeyValue parser update
+    - Path: glazed/pkg/cmds/fields/parse_test.go
+      Note: Step 13 TypeKeyValue parser tests
     - Path: glazed/pkg/cmds/logging/init.go
       Note: Research evidence for diary Step 2
     - Path: glazed/pkg/cmds/logging/section.go
@@ -33,6 +37,7 @@ LastUpdated: 2026-05-25T09:55:00-04:00
 WhatFor: Use this to understand how the implementation guide was produced and how to continue the ticket.
 WhenToUse: When reviewing, extending, or implementing the LOGCOPTER-001 design.
 ---
+
 
 
 
@@ -1227,6 +1232,192 @@ logcopter/cmd/logcopter-gen/packages.go
 logcopter/cmd/logcopter-gen/render.go
 logcopter/cmd/logcopter-gen/packages_test.go
 logcopter/cmd/logcopter-gen/render_test.go
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
+```
+
+## Step 13: Glazed TypeKeyValue accepts key=value
+
+I started the Glazed-side work with the smallest prerequisite: improve `fields.TypeKeyValue` so it accepts both historical `key:value` syntax and the more common CLI `key=value` syntax. This directly supports logcopter area overrides such as `--log-area app.view=debug` while preserving existing colon-based behavior.
+
+This step is intentionally limited to the generic Glazed field parser and tests. The logging section integration comes after the parser behavior is stable.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Continue implementation, starting with the TypeKeyValue parser improvement identified in the task list.
+
+**Inferred user intent:** Make the eventual `--log-area` UX natural without inventing a custom parser outside Glazed's field system.
+
+**Commit (code):** `0736140a8e59cb41604f068043052616561699d2` — "Accept equals syntax for key-value fields"
+
+### What I did
+
+- Updated `glazed/pkg/cmds/fields/parse.go`.
+- Replaced hard-coded `strings.Split(arg, ":")` behavior for `TypeKeyValue` with a `splitKeyValueArgument` helper.
+- The helper now accepts:
+  - `key:value`
+  - `key=value`
+  - surrounding whitespace around key/value.
+- The helper rejects:
+  - missing separators;
+  - empty keys;
+  - empty values.
+- Updated `glazed/pkg/cmds/fields/parse_test.go` with colon, equals, mixed, whitespace, and invalid cases.
+- Ran `go test ./pkg/cmds/fields` in the Glazed repository.
+
+### Why
+
+`fields.TypeKeyValue` is the right field abstraction for logcopter area overrides. Supporting `key=value` globally makes the field type more CLI-friendly and avoids adding logcopter-specific parsing quirks later.
+
+### What worked
+
+The targeted Glazed field tests passed:
+
+```text
+ok  	github.com/go-go-golems/glazed/pkg/cmds/fields	0.024s
+```
+
+### What didn't work
+
+I initially tried to append this diary entry while already inside the `logcopter/` repository and used a path prefixed with `logcopter/`, which failed:
+
+```text
+/bin/bash: line 35: logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md: No such file or directory
+```
+
+The changelog update had already succeeded, so I appended the diary entry from the workspace root using the correct path.
+
+### What I learned
+
+The existing parser error text already said "key=value pair" even though only `:` worked. Accepting both `:` and `=` aligns implementation with the error wording and user expectations.
+
+### What was tricky to build
+
+The important compatibility decision was to try `:` first, then `=`. This preserves existing values containing `=` when colon syntax is used, while allowing equals syntax for common CLI usage.
+
+### What warrants a second pair of eyes
+
+- Confirm whether values should be allowed to be empty for any existing `TypeKeyValue` use cases. The new helper rejects empty values.
+- Confirm whether keys/values should be trimmed globally for `TypeKeyValue`. This is useful for CLI ergonomics but is a minor behavior change.
+
+### What should be done in the future
+
+- Commit the Glazed parser change.
+- Continue with Glazed logging section fields: `log-config`, `log-area`, `strict-log-areas`.
+
+### Code review instructions
+
+- Review `glazed/pkg/cmds/fields/parse.go`, especially `splitKeyValueArgument`.
+- Review `glazed/pkg/cmds/fields/parse_test.go` TypeKeyValue cases.
+- Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/glazed
+go test ./pkg/cmds/fields
+```
+
+### Technical details
+
+Files changed in this step:
+
+```text
+glazed/pkg/cmds/fields/parse.go
+glazed/pkg/cmds/fields/parse_test.go
+```
+
+## Step 14: Add Markdown help entries and load them from the Glaze binary
+
+I added Markdown-only help entries to the logcopter repository and updated the Glaze binary to load them when the logcopter checkout is available next to Glazed. This keeps logcopter free of a Glazed dependency while making the documentation available through `glaze help` during workspace development.
+
+This step implements the user's request to add a guide and tutorial as Glazed help entries in the logcopter package, with the important constraint that logcopter should only contain Markdown docs and not import Glazed.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead. Also add a task to write a nice guide and a tutorial as glazed help entries in the logcopter package (just the markdown, so that we don't introduce a dependency on glazed), and then parse and load these in the glaze binary in glazed/cmd/glaze.
+
+then continue"
+
+**Assistant interpretation:** Continue implementation, add documentation tasks, create Markdown help entries in logcopter without adding a Glazed dependency, and update the Glaze binary to load those Markdown entries.
+
+**Inferred user intent:** The user wants logcopter documentation discoverable from `glaze help` in the workspace while keeping dependency direction clean.
+
+**Commit (Logcopter docs):** this diary update is included in the Logcopter commit "Add logcopter help documentation entries".
+
+**Commit (Glazed loader):** `3a3d5ec58631f683348df97026f97338b8f484c4` — "Load logcopter help docs in glaze"
+
+### What I did
+
+- Added `logcopter/pkg/doc/doc.go` with package documentation only and no Glazed import.
+- Added `logcopter/pkg/doc/topics/logcopter-logging-architecture.md`.
+- Added `logcopter/pkg/doc/tutorials/logcopter-package-logging.md`.
+- Updated `glazed/cmd/glaze/main.go` with `addLogcopterDocs(helpSystem)`.
+- The loader checks likely workspace-relative paths:
+  - `../logcopter/pkg/doc`
+  - `../../logcopter/pkg/doc`
+  - `logcopter/pkg/doc`
+- The loader calls `helpSystem.LoadSectionsFromFS(os.DirFS(candidate), ".")` when it finds the doc directory.
+- Updated `tasks.md` with Phase 6.5 for logcopter help docs and Glaze loading.
+- Ran `go test ./...` in logcopter after adding docs.
+- Ran `go test ./cmd/glaze` in Glazed.
+- Verified help loading with `go run ./cmd/glaze help logcopter-logging-architecture`.
+
+### Why
+
+The docs are useful as Glazed help entries, but logcopter should remain a small utility package and not depend on Glazed. Loading Markdown files from the Glaze binary preserves that dependency direction.
+
+### What worked
+
+The Glaze help command successfully rendered the new architecture entry:
+
+```text
+# Logcopter Logging Architecture
+Understand logcopter areas, generated package loggers, Glazed integration, and shared logging profiles.
+```
+
+### What didn't work
+
+N/A. The workspace-relative loader worked from the Glazed checkout.
+
+### What I learned
+
+Glazed's help system can load arbitrary Markdown trees from an `fs.FS`, so logcopter does not need any Go-level integration with Glazed for documentation. The only unresolved release question is whether this workspace-relative loading is sufficient or whether release builds should copy/embed these docs into Glazed.
+
+### What was tricky to build
+
+The dependency direction is subtle: adding a `doc.AddDocToHelpSystem` function in logcopter would require importing Glazed. I avoided that and kept `pkg/doc/doc.go` as plain package documentation so only the Glaze binary depends on Glazed's help APIs.
+
+### What warrants a second pair of eyes
+
+- Decide whether release builds should include logcopter docs when the logcopter checkout is not present.
+- Confirm whether the workspace-relative candidate paths are acceptable or should be configurable.
+
+### What should be done in the future
+
+- If release-time docs are required, copy or generate logcopter Markdown into Glazed's doc tree as part of a release process, rather than importing Glazed from logcopter.
+- Add a small test for `addLogcopterDocs` if the path loading behavior becomes important.
+
+### Code review instructions
+
+- Review `logcopter/pkg/doc/topics/logcopter-logging-architecture.md` and `logcopter/pkg/doc/tutorials/logcopter-package-logging.md` for help-entry quality.
+- Review `glazed/cmd/glaze/main.go` for optional workspace-relative loading behavior.
+- Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/glazed
+go run ./cmd/glaze help logcopter-logging-architecture
+```
+
+### Technical details
+
+Files changed in this step:
+
+```text
+logcopter/pkg/doc/doc.go
+logcopter/pkg/doc/topics/logcopter-logging-architecture.md
+logcopter/pkg/doc/tutorials/logcopter-package-logging.md
+glazed/cmd/glaze/main.go
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
 ```

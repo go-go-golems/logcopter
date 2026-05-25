@@ -94,13 +94,22 @@
 
 ## Phase 6 — Glazed key-value field support for area overrides
 
-- [ ] Inspect current `fields.TypeKeyValue` parser behavior in `glazed/pkg/cmds/fields`.
-- [ ] Add support for both `key:value` and `key=value` inputs if not already supported.
-- [ ] Keep existing colon syntax backward-compatible.
-- [ ] Add parser tests for repeated values: `app.view:debug`, `app.db=warn`.
+- [x] Inspect current `fields.TypeKeyValue` parser behavior in `glazed/pkg/cmds/fields`.
+- [x] Add support for both `key:value` and `key=value` inputs if not already supported.
+- [x] Keep existing colon syntax backward-compatible.
+- [x] Add parser tests for repeated values: `app.view:debug`, `app.db=warn`.
 - [ ] Add parser tests for comma-separated Cobra `StringSlice` values if supported by pflag.
-- [ ] Add clear parse errors for malformed entries such as `app.view` or `app.view:`.
+- [x] Add clear parse errors for malformed entries such as `app.view` or `app.view:`.
 - [ ] Confirm decoded values can populate `map[string]string` in a settings struct.
+
+## Phase 6.5 — Logcopter help entries surfaced through Glaze
+
+- [x] Add Markdown-only logcopter help entries under `logcopter/pkg/doc` without importing Glazed.
+- [x] Write a general architecture guide help entry.
+- [x] Write a tutorial help entry for generated package loggers and Glazed logging configuration.
+- [x] Update `glazed/cmd/glaze` to discover and load logcopter Markdown help entries when the logcopter checkout is present.
+- [x] Validate with `go run ./cmd/glaze help logcopter-logging-architecture` from the Glazed checkout.
+- [ ] Decide whether release builds should copy/embed logcopter help docs into Glazed, or keep this as workspace-only discovery.
 
 ## Phase 7 — In-place Glazed logging integration
 
