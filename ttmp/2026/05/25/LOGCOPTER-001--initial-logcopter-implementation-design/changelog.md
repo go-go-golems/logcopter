@@ -170,3 +170,47 @@ Completed logcopter output helpers and generated-source compile test
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 16
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Marked Phase 4 and generator compile test complete
 
+
+## 2026-05-25
+
+Implemented in-place Glazed logcopter logging integration
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/fields/parse_test.go — TypeKeyValue pflag StringSlice regression test
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/logging/init-early.go — Parses logcopter flags during early logging
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/logging/init.go — Configures zerolog and logcopter default manager from merged settings
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/logging/logcopter_test.go — Glazed logcopter integration tests
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/logging/section.go — Added logcopter flags and settings fields
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 17
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Marked Phase 6
+
+
+## 2026-05-25
+
+Completed cross-repository validation for logcopter and Glazed integration
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 18 validation pass
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Marked Phase 8 validation complete
+
+
+## 2026-05-25
+
+Added logcopter README updates, examples, generated-file CI check, and release notes
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/doc/topics/logging-section.md — Updated Glazed logging docs for logcopter
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/.github/workflows/push.yml — Generated-file CI check
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/CHANGELOG.md — Initial release notes and Glazed migration note
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/Makefile — generate-check target
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/README.md — Runtime
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/examples/basic/main.go — Native runtime example
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/examples/library-prefix/decoder/decoder.go — Example library package using generated logger
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/examples/library-prefix/decoder/logcopter.go — Generated package logger example
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/examples/library-prefix/main.go — Library prefix example main
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 19
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Marked Phase 9 and most Phase 10 items complete
+

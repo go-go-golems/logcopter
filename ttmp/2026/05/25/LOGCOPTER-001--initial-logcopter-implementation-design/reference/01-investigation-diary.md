@@ -1494,3 +1494,153 @@ go test ./...
 ```
 
 Result: passed.
+
+## Step 17: Implement in-place Glazed logcopter integration
+
+I implemented the first in-place Glazed logging integration pass. Glazed now imports logcopter directly and configures the logcopter default manager from its existing `pkg/cmds/logging` package instead of introducing a separate adapter package.
+
+### What I did
+
+- Updated `glazed/pkg/cmds/logging/section.go`:
+  - added `log-config` as a repeatable string-list setting;
+  - added `log-area` as a key-value setting;
+  - added `areas` for canonical `logging.areas` config maps;
+  - added `strict-log-areas`;
+  - extended `LoggingSettings` with `LogConfigFiles`, `LogAreas`, `Areas`, and `StrictAreas`.
+- Updated `AddLoggingSectionToRootCommand`:
+  - added persistent `--log-config`;
+  - added persistent `--log-area`;
+  - added persistent `--strict-log-areas`.
+- Reworked `glazed/pkg/cmds/logging/init.go`:
+  - builds the base zerolog logger and still supports text/json, stderr/stdout, and rotating file output;
+  - keeps rotating file output in Glazed, not logcopter;
+  - sets zerolog's global level to `trace` so global filtering does not suppress more verbose per-area logcopter child loggers;
+  - applies filtering to the conventional global `log.Logger` through its logger level;
+  - calls `logcopter.Configure` with merged default/app/profile/CLI settings;
+  - added profile loading for both `logging:`-wrapped files and direct logcopter-shaped files.
+- Updated `glazed/pkg/cmds/logging/init-early.go`:
+  - preserves `--log-config`, `--log-area`, and `--strict-log-areas` during early argument filtering;
+  - parses area overrides before command discovery;
+  - applies explicit CLI overrides after profile files.
+- Added `glazed/pkg/cmds/logging/logcopter_test.go` covering:
+  - area override parsing with colon, equals, repeated flags, and comma-separated pflag values;
+  - malformed area override errors;
+  - wrapped profile files;
+  - direct profile files;
+  - Cobra profile + CLI merge behavior;
+  - early logging profile + CLI parsing.
+- Added a `TypeKeyValue` pflag `StringSlice` regression test in `glazed/pkg/cmds/fields/parse_test.go`.
+- Added the Glazed dependency on the local logcopter module for workspace validation.
+- Updated `tasks.md` Phase 6, 6.5, and 7 checkboxes.
+
+### Why
+
+The design calls for Glazed to own command/config logging integration because applications already depend on Glazed. Logcopter remains the runtime utility and generator package. This keeps application setup stable while enabling package/area-scoped log levels.
+
+### Validation
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/glazed
+go test ./pkg/cmds/fields ./pkg/cmds/logging
+```
+
+Result: passed.
+
+### Notes and caveats
+
+- The initial release decision for logcopter help docs is workspace-only discovery from the Glaze binary. Release packaging can later copy/embed the Markdown docs if needed.
+- Glazed currently uses a local workspace dependency on logcopter while logcopter is being developed in the same workspace.
+- `InitLoggerFromCobra` can distinguish direct CLI overrides via `flags.Changed`. `InitLoggerFromSettings` receives an already-decoded settings struct, so callers that need exact app-vs-CLI precedence should use the Cobra path or pass intentionally merged settings.
+
+## Step 18: Cross-repository validation pass
+
+I ran the cross-repository validation pass after the Glazed logcopter integration commit.
+
+### Commands and results
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
+go test ./...
+```
+
+Result: passed.
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/glazed
+go test ./pkg/cmds/fields ./pkg/cmds/logging
+```
+
+Result: passed.
+
+The Glazed commit hook for `Integrate logcopter with glazed logging` also ran broader validation:
+
+```text
+go test ./...
+golangci-lint
+gosec
+govulncheck
+```
+
+Result: all passed.
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/pinocchio
+go test ./cmd/pinocchio
+go run ./cmd/pinocchio --help
+```
+
+Result: command package compiled and the Pinocchio help bootstrap rendered successfully.
+
+### What this verified
+
+- Logcopter runtime and generator tests still pass.
+- Glazed logging tests cover the new flags, profiles, early logging path, and per-area overrides.
+- Broader Glazed tests/lints/security checks passed through the commit hook.
+- Pinocchio can still bootstrap through its existing Glazed-based logging setup.
+- Existing import/setup shape remains compatible because integration stayed in `glazed/pkg/cmds/logging`.
+
+## Step 19: Documentation, examples, and release-readiness pass
+
+I completed the documentation/example phase and most release-readiness items.
+
+### What I did
+
+- Rewrote `logcopter/README.md` with:
+  - runtime setup example;
+  - generator invocation;
+  - `go generate` example;
+  - Glazed setup guidance;
+  - CLI area override examples;
+  - `--log-config` profile examples;
+  - wrapped and direct profile file shapes;
+  - `Raw()` reload caveat;
+  - zerolog global-level interaction note.
+- Added `examples/basic` for direct runtime usage.
+- Added `examples/library-prefix` for reusable library-style area prefixes.
+- Generated `examples/library-prefix/decoder/logcopter.go` with `logcopter-gen`.
+- Added `make generate-check`.
+- Added a GitHub Actions generated-file check using `logcopter-gen -check`.
+- Added `CHANGELOG.md` with an initial unreleased entry and a migration note for Glazed logging users.
+- Updated `glazed/pkg/doc/topics/logging-section.md` with logcopter flags, YAML examples, profile shapes, and global-level behavior.
+- Marked Phase 9 complete and Phase 10 complete except for final tagging/release preparation.
+
+### Validation
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
+go test ./...
+make generate-check
+```
+
+Result: passed.
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/glazed
+go test ./pkg/cmds/logging ./cmd/glaze
+```
+
+Result: passed.
+
+### Remaining release item
+
+The only Phase 10 item left is tagging/preparing an actual release. I did not tag because the implementation is still on the task branch and should be reviewed first.
