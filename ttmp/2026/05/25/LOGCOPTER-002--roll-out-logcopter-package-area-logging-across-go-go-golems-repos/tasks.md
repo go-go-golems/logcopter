@@ -15,16 +15,19 @@
 
 ## Phase 1 — Glazed first implementation pass
 
-- [ ] Update `glazed/go.mod` to require `github.com/go-go-golems/logcopter v0.0.1`.
-- [ ] Remove local `replace github.com/go-go-golems/logcopter => ../logcopter` from Glazed.
-- [ ] Run `go mod tidy` in Glazed.
-- [ ] Generate Glazed package loggers for `./pkg/...` with prefix `go-go-golems.glazed`.
-- [ ] Remove or alias `github.com/rs/zerolog/log` imports in converted Glazed packages.
-- [ ] Add generated-file check for Glazed package loggers.
-- [ ] Run targeted Glazed tests: `go test ./pkg/cmds/fields ./pkg/cmds/logging ./cmd/glaze`.
-- [ ] Run targeted tests for converted Glazed packages.
-- [ ] Smoke test `go run ./cmd/glaze --log-area go-go-golems.glazed.pkg.help=debug help logging-section-reference`.
-- [ ] Commit Glazed changes.
+- [x] Update `glazed/go.mod` to require `github.com/go-go-golems/logcopter v0.0.1`.
+- [x] Remove local `replace github.com/go-go-golems/logcopter => ../logcopter` from Glazed.
+- [x] Register `logcopter-gen` using the Go tool mechanism so `go tool logcopter-gen` works.
+- [x] Add a repository-local `go:generate` entry point for Glazed package logger generation.
+- [x] Ensure `go generate ./...` regenerates Glazed logcopter package logger files.
+- [x] Run `go mod tidy` in Glazed.
+- [x] Generate Glazed package loggers for `./pkg/...` with prefix `go-go-golems.glazed`.
+- [x] Remove or alias `github.com/rs/zerolog/log` imports in converted Glazed packages.
+- [x] Add generated-file check for Glazed package loggers.
+- [x] Run targeted Glazed tests: `go test ./pkg/cmds/fields ./pkg/cmds/logging ./cmd/glaze`.
+- [x] Run targeted tests for converted Glazed packages.
+- [x] Smoke test `go run ./cmd/glaze --log-area go-go-golems.glazed.pkg.help=debug help logging-section-reference`.
+- [x] Commit Glazed changes (`69733764289f9939cb0cbccad71b76b7466c59d8`).
 
 ## Phase 2 — Pinocchio rollout
 

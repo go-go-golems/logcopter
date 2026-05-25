@@ -25,3 +25,29 @@ Validated LOGCOPTER-002 and uploaded analysis bundle to reMarkable
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded validation and reMarkable upload
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/vocabulary.yaml — Added clay
 
+
+## 2026-05-25
+
+Started Glazed transition and added go tool/go generate tasks
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Step 3 start of Glazed transition
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/tasks.md — Added Go tool and go generate tasks to Phase 1
+
+
+## 2026-05-25
+
+Completed Glazed package logger transition (commit 69733764289f9939cb0cbccad71b76b7466c59d8)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/.github/workflows/push.yml — Added generated package logger freshness check
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/Makefile — Added logcopter generation/check targets
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/go.mod — Requires published logcopter v0.0.1 and registers logcopter-gen tool
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/logcopter_generate.go — Repository-local go generate entry point for logcopter package loggers
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/logging/init.go — Aliases global zerolog package as zlog while package diagnostics use generated log
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/helpers/files/temp-files_test.go — Aliases standard library log as stdlog to avoid generated log collision
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Step 4 implementation diary
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/tasks.md — Marked Glazed Phase 1 tasks complete
+
