@@ -224,3 +224,12 @@ Marked LOGCOPTER-001 release preparation complete without creating a tag
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 20 release preparation decision
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — All phases marked complete with release-preparation note
 
+
+## 2026-05-25
+
+Ran final validation and uploaded refreshed LOGCOPTER-001 bundle to reMarkable
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded final validation and upload
+

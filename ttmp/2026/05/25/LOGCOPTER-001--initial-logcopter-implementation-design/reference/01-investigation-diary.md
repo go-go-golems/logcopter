@@ -1656,3 +1656,31 @@ I did not create a release tag in this implementation session. The work now has 
 ### Result
 
 All LOGCOPTER-001 task phases are now checked as complete. The final action before a real release is a human review followed by tagging/publishing.
+
+## Step 21: Final validation and reMarkable upload
+
+I ran final validation after all task phases were marked complete and uploaded the refreshed document bundle to reMarkable.
+
+### Validation
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
+go test ./...
+make generate-check
+docmgr doctor --ticket LOGCOPTER-001 --stale-after 30
+```
+
+Result: passed, and docmgr doctor reported all checks passed.
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/glazed
+go test ./pkg/cmds/fields ./pkg/cmds/logging ./cmd/glaze
+```
+
+Result: passed.
+
+### reMarkable upload
+
+```text
+OK: uploaded LOGCOPTER-001 Initial Logcopter Implementation Guide.pdf -> /ai/2026/05/25/LOGCOPTER-001
+```
