@@ -31,11 +31,3 @@ func ParseLevel(s string) (zerolog.Level, error) {
 		return level, nil
 	}
 }
-
-func mustParseLevel(s string) zerolog.Level {
-	level, err := ParseLevel(s)
-	if err != nil {
-		panic(err)
-	}
-	return level
-}
