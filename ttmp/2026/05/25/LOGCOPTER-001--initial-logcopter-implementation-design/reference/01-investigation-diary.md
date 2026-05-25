@@ -1702,3 +1702,11 @@ cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
 go test ./...
 go test ./pkg/logcopter -bench BenchmarkLoggerLookup -benchmem
 ```
+
+## Step 23: Final post-benchmark reMarkable upload
+
+After adding the benchmark task, I uploaded the refreshed bundle again.
+
+```text
+OK: uploaded LOGCOPTER-001 Initial Logcopter Implementation Guide.pdf -> /ai/2026/05/25/LOGCOPTER-001
+```
