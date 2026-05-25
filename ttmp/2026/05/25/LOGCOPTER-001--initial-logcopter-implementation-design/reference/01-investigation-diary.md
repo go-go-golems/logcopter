@@ -1116,3 +1116,117 @@ logcopter/pkg/logcopter/manager_test.go
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
 ```
+
+## Step 12: Phase 5 first pass generator implementation
+
+I implemented the first functional version of `logcopter-gen`. I intentionally moved to the generator before output helpers because output construction may remain mostly in Glazed, while the generator is independent and unblocks generated package logger usage.
+
+The generator now loads packages with `go/packages`, derives areas from package paths, renders gofmt-formatted logger files, supports dry-run/check modes, and can optionally emit an area registry file.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Continue implementing the task list in focused chunks after the runtime manager commit.
+
+**Inferred user intent:** Build the smallest useful vertical slices and keep committing at boundaries.
+
+**Commit (code):** pending at the time this step text was written.
+
+### What I did
+
+- Reworked `cmd/logcopter-gen/main.go` so it delegates to a real generator config.
+- Added `cmd/logcopter-gen/packages.go` with:
+  - generator config type;
+  - package planning;
+  - package loading through `golang.org/x/tools/go/packages`;
+  - area derivation from `-strip-prefix` and `-area-prefix`.
+- Added `cmd/logcopter-gen/render.go` with:
+  - generated package logger rendering;
+  - explicit import alias `import logcopter "..."`;
+  - gofmt formatting through `go/format`;
+  - `-dry-run` and `-check` write behavior;
+  - optional `-areas-out` registry rendering.
+- Added generator tests for area derivation and render output.
+- Added dependency `golang.org/x/tools/go/packages`.
+- Ran `go test ./...`.
+- Ran a dry-run generator smoke test:
+
+```bash
+go run ./cmd/logcopter-gen \
+  -area-prefix app \
+  -strip-prefix github.com/go-go-golems/logcopter/pkg \
+  -dry-run \
+  ./pkg/...
+```
+
+### Why
+
+Generated package loggers are one of logcopter's main ergonomic features. This pass makes the command real enough to validate package discovery and output paths before integrating it into examples or CI.
+
+### What worked
+
+Tests passed:
+
+```text
+ok  	github.com/go-go-golems/logcopter/cmd/logcopter-gen	0.002s
+ok  	github.com/go-go-golems/logcopter/pkg/logcopter	(cached)
+```
+
+The dry-run smoke test printed:
+
+```text
+DRY write /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/logcopter.go
+```
+
+### What didn't work
+
+N/A. The first generator pass compiled and tests passed.
+
+### What I learned
+
+The generator can remain independent of Glazed and Cobra. Standard library `flag`, `go/packages`, `go/format`, and ordinary file writes are enough for the initial command.
+
+### What was tricky to build
+
+The main edge is path-to-area derivation. The generator must reject packages outside `-strip-prefix`; otherwise it could silently create misleading area names. The first tests cover root, application, library, and outside-prefix cases.
+
+### What warrants a second pair of eyes
+
+- Review whether `-areas-out` should let callers specify the package name explicitly instead of deriving it from the parent directory.
+- Review whether package loading should include test packages or generated files in any special way.
+- Review whether `-check` should report all stale files instead of stopping at the first stale file.
+
+### What should be done in the future
+
+- Add a temp-module compilation test for generated source.
+- Add integration tests around actual file writes and `-check` behavior.
+- Decide whether `-areas-out` needs package-name and variable-name flags.
+
+### Code review instructions
+
+- Start with `cmd/logcopter-gen/packages.go` for package discovery and area derivation.
+- Then review `cmd/logcopter-gen/render.go` for generated source shape and write behavior.
+- Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
+go test ./...
+go run ./cmd/logcopter-gen -area-prefix app -strip-prefix github.com/go-go-golems/logcopter/pkg -dry-run ./pkg/...
+```
+
+### Technical details
+
+Files changed in this step:
+
+```text
+logcopter/go.mod
+logcopter/go.sum
+logcopter/cmd/logcopter-gen/main.go
+logcopter/cmd/logcopter-gen/packages.go
+logcopter/cmd/logcopter-gen/render.go
+logcopter/cmd/logcopter-gen/packages_test.go
+logcopter/cmd/logcopter-gen/render_test.go
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
+```

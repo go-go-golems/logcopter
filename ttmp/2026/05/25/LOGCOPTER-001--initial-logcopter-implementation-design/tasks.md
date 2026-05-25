@@ -23,7 +23,7 @@
 - [x] Replace template README with a short logcopter README.
 - [x] Decide minimum Go/toolchain version for the module.
 - [x] Add runtime dependency on `github.com/rs/zerolog`.
-- [ ] Add generator dependency on `golang.org/x/tools/go/packages`.
+- [x] Add generator dependency on `golang.org/x/tools/go/packages`.
 - [x] Add test dependency such as `github.com/stretchr/testify` if used. (Not needed yet; Phase 1 uses the standard library `testing` package.)
 - [x] Run `go mod tidy`.
 - [x] Run `go test ./...` to establish a clean scaffold baseline.
@@ -75,21 +75,21 @@
 
 ## Phase 5 — Code generator
 
-- [ ] Implement `cmd/logcopter-gen/main.go` flag parsing.
-- [ ] Implement package discovery with `go/packages`.
-- [ ] Implement `-logcopter-import`.
-- [ ] Implement `-strip-prefix`.
-- [ ] Implement `-area-prefix`.
-- [ ] Implement `-out` with default `logcopter.go`.
-- [ ] Implement `-var` with default `log`.
-- [ ] Implement `-include-main` defaulting to false.
-- [ ] Implement `-areas-out` registry generation.
-- [ ] Implement `-dry-run`.
-- [ ] Implement `-check` for CI.
-- [ ] Render generated files with an explicit import alias: `import logcopter "..."`.
-- [ ] Run generated output through `gofmt`.
-- [ ] Test package path to area conversion.
-- [ ] Test strip-prefix errors.
+- [x] Implement `cmd/logcopter-gen/main.go` flag parsing.
+- [x] Implement package discovery with `go/packages`.
+- [x] Implement `-logcopter-import`.
+- [x] Implement `-strip-prefix`.
+- [x] Implement `-area-prefix`.
+- [x] Implement `-out` with default `logcopter.go`.
+- [x] Implement `-var` with default `log`.
+- [x] Implement `-include-main` defaulting to false.
+- [x] Implement `-areas-out` registry generation.
+- [x] Implement `-dry-run`.
+- [x] Implement `-check` for CI.
+- [x] Render generated files with an explicit import alias: `import logcopter "..."`.
+- [x] Run generated output through `gofmt`.
+- [x] Test package path to area conversion.
+- [x] Test strip-prefix errors.
 - [ ] Test generated source compilation in a temp module.
 
 ## Phase 6 — Glazed key-value field support for area overrides
