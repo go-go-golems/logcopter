@@ -903,3 +903,97 @@ logcopter/cmd/XXX/main.go (removed)
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
 ```
+
+## Step 10: Phase 1 runtime level and area primitives
+
+I implemented the first runtime package slice: level parsing, area validation, and hierarchical level resolution. These are deliberately small primitives because later manager and logger code should depend on tested helpers instead of embedding parsing rules in the hot path.
+
+This phase also removes the placeholder `pkg/doc.go` package and introduces the real `pkg/logcopter` package.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Continue executing the task list after the scaffold commit.
+
+**Inferred user intent:** Build the runtime incrementally, with tests and focused commits.
+
+**Commit (code):** pending at the time this step text was written.
+
+### What I did
+
+- Removed the placeholder `pkg/doc.go` file.
+- Added `pkg/logcopter/level.go`.
+- Implemented `ParseLevel` for zerolog levels plus aliases:
+  - `warning` -> `warn`
+  - `off`, `none`, `disabled` -> `zerolog.Disabled`
+- Added `pkg/logcopter/areas.go`.
+- Implemented `NormalizeArea` for dot-separated area names.
+- Implemented longest-prefix `resolveLevel`.
+- Added table tests in `pkg/logcopter/level_test.go` and `pkg/logcopter/areas_test.go`.
+- Added runtime dependencies on `github.com/rs/zerolog` and `github.com/pkg/errors`.
+- Ran `go mod tidy`.
+- Ran `go test ./...`.
+- Marked Phase 1 tasks complete in `tasks.md`.
+
+### Why
+
+Level parsing and hierarchical lookup are core correctness behavior. They should be stable before building reloadable manager state or generated package loggers on top.
+
+### What worked
+
+The tests passed:
+
+```text
+?   	github.com/go-go-golems/logcopter/cmd/logcopter-gen	[no test files]
+ok  	github.com/go-go-golems/logcopter/pkg/logcopter	0.002s
+```
+
+### What didn't work
+
+N/A. The primitives and tests passed on the first run.
+
+### What I learned
+
+Area validation needs to be strict enough to catch typos such as `app..db` or `app/db`, while still allowing useful generated/package-like segments such as `my-lib` and `parser_v2`.
+
+### What was tricky to build
+
+The validation rules are a product decision. I chose dot-separated segments containing letters, digits, `_`, and `-`. If future package prefixes need other characters, this helper is the single place to revise the rule.
+
+### What warrants a second pair of eyes
+
+- Confirm whether area segments should allow any additional characters, especially if using organization names or generated names with unusual punctuation.
+- Confirm whether an empty `LogLevel` should error or default in higher-level config parsing. `ParseLevel` currently treats an empty string as an error; defaults should be applied before calling it.
+
+### What should be done in the future
+
+- Build manager state on top of these helpers.
+- Add config parsing tests that verify defaults are applied before `ParseLevel`.
+
+### Code review instructions
+
+- Review `pkg/logcopter/level.go` first for aliases and error wrapping.
+- Review `pkg/logcopter/areas.go` for naming rules and longest-prefix lookup.
+- Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
+go test ./...
+```
+
+### Technical details
+
+Files changed in this step:
+
+```text
+logcopter/go.mod
+logcopter/go.sum
+logcopter/pkg/doc.go
+logcopter/pkg/logcopter/level.go
+logcopter/pkg/logcopter/areas.go
+logcopter/pkg/logcopter/level_test.go
+logcopter/pkg/logcopter/areas_test.go
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
+```

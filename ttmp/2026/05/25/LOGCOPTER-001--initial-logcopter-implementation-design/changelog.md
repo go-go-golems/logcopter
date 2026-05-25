@@ -78,3 +78,17 @@ Phase 0 scaffold: renamed module and replaced placeholder command with logcopter
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 9 scaffold diary
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Phase 0 checklist progress
 
+
+## 2026-05-25
+
+Phase 1 runtime primitives: implemented level parsing and area resolution helpers
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/areas.go — Area normalization and longest-prefix level resolution
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/areas_test.go — Area validation and resolution tests
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/level.go — ParseLevel with aliases for warning/off/none/disabled
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/level_test.go — Level parsing table tests
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 10 runtime primitives diary
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Marked Phase 1 tasks complete
+

@@ -22,22 +22,22 @@
 - [x] Rename `cmd/XXX` to `cmd/logcopter-gen`.
 - [x] Replace template README with a short logcopter README.
 - [x] Decide minimum Go/toolchain version for the module.
-- [ ] Add runtime dependency on `github.com/rs/zerolog`.
+- [x] Add runtime dependency on `github.com/rs/zerolog`.
 - [ ] Add generator dependency on `golang.org/x/tools/go/packages`.
-- [ ] Add test dependency such as `github.com/stretchr/testify` if used.
+- [x] Add test dependency such as `github.com/stretchr/testify` if used. (Not needed yet; Phase 1 uses the standard library `testing` package.)
 - [x] Run `go mod tidy`.
 - [x] Run `go test ./...` to establish a clean scaffold baseline.
 
 ## Phase 1 — Runtime level and area primitives
 
-- [ ] Create `pkg/logcopter/level.go`.
-- [ ] Implement `ParseLevel` with aliases: `warning`, `off`, `none`, `disabled`.
-- [ ] Add table tests for valid levels.
-- [ ] Add table tests for invalid levels with clear errors.
-- [ ] Create `pkg/logcopter/areas.go`.
-- [ ] Implement area normalization/validation helper.
-- [ ] Implement longest-prefix level resolution.
-- [ ] Test exact match, parent match, default fallback, and invalid area strings.
+- [x] Create `pkg/logcopter/level.go`.
+- [x] Implement `ParseLevel` with aliases: `warning`, `off`, `none`, `disabled`.
+- [x] Add table tests for valid levels.
+- [x] Add table tests for invalid levels with clear errors.
+- [x] Create `pkg/logcopter/areas.go`.
+- [x] Implement area normalization/validation helper.
+- [x] Implement longest-prefix level resolution.
+- [x] Test exact match, parent match, default fallback, and invalid area strings.
 
 ## Phase 2 — Reload-aware runtime manager
 
