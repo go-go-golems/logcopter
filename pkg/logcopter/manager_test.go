@@ -135,6 +135,23 @@ func TestAreasAndEffectiveLevel(t *testing.T) {
 	}
 }
 
+func TestCallerOutputFromBaseLogger(t *testing.T) {
+	m := NewManager()
+	log := m.Package("app.caller")
+
+	var buf bytes.Buffer
+	base := zerolog.New(&buf).With().Caller().Logger()
+	if err := m.Configure(base, Config{Level: "info"}); err != nil {
+		t.Fatalf("Configure returned error: %v", err)
+	}
+
+	log.Info().Msg("with caller")
+	got := buf.String()
+	if !strings.Contains(got, `"caller":`) {
+		t.Fatalf("expected caller field from base logger, got %q", got)
+	}
+}
+
 func TestStrictAreaValidation(t *testing.T) {
 	m := NewManager()
 	_ = m.Package("app.view.render")

@@ -60,18 +60,18 @@
 - [x] Implement `Area()` and `IsZero()` helpers.
 - [x] Add tests that emitted events include the `area` field.
 - [x] Add tests that disabled levels drop logs.
-- [ ] Add caller-output test if `Caller()` support is enabled through the base logger.
+- [x] Add caller-output test if `Caller()` support is enabled through the base logger.
 - [ ] Benchmark manager lookup overhead before adding any cache.
 
 ## Phase 4 — Output construction helpers
 
-- [ ] Create `pkg/logcopter/output.go` if output construction belongs in logcopter runtime.
-- [ ] Support stderr default output.
-- [ ] Support stdout where needed.
-- [ ] Support JSON output.
-- [ ] Support text console output.
-- [ ] Decide whether rotating file output stays in Glazed only or is shared with logcopter.
-- [ ] Test output writer selection separately from area filtering.
+- [x] Create `pkg/logcopter/output.go` if output construction belongs in logcopter runtime.
+- [x] Support stderr default output.
+- [x] Support stdout where needed.
+- [x] Support JSON output.
+- [x] Support text console output.
+- [x] Decide whether rotating file output stays in Glazed only or is shared with logcopter. Decision: rotating file output stays in Glazed; logcopter only provides small stream/format helpers.
+- [x] Test output writer selection separately from area filtering.
 
 ## Phase 5 — Code generator
 
@@ -90,7 +90,7 @@
 - [x] Run generated output through `gofmt`.
 - [x] Test package path to area conversion.
 - [x] Test strip-prefix errors.
-- [ ] Test generated source compilation in a temp module.
+- [x] Test generated source compilation in a temp module.
 
 ## Phase 6 — Glazed key-value field support for area overrides
 

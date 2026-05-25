@@ -156,3 +156,17 @@ Uploaded updated LOGCOPTER-001 bundle with logcopter help docs to reMarkable
 
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded reMarkable upload step
 
+
+## 2026-05-25
+
+Completed logcopter output helpers and generated-source compile test
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/cmd/logcopter-gen/integration_test.go — Generated-source temporary module compile test
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/manager_test.go — Caller propagation test
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/output.go — Small zerolog output construction helpers
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/output_test.go — Output helper tests
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 16
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Marked Phase 4 and generator compile test complete
+

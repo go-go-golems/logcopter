@@ -1463,3 +1463,34 @@ OK: uploaded LOGCOPTER-001 Initial Logcopter Implementation Guide.pdf -> /ai/202
 ### Note
 
 The first upload attempt timed out after 180 seconds. Retrying with a longer timeout completed successfully.
+
+## Step 16: Complete logcopter output helpers and generator compile test
+
+I completed the remaining logcopter-side Phase 4 and Phase 5 tasks before continuing with Glazed integration.
+
+### What I did
+
+- Added `pkg/logcopter/output.go`.
+- Added small output helper APIs:
+  - `WriterForOutput` for stderr/stdout selection;
+  - `WriterForFormat` for JSON passthrough vs text console writer;
+  - `ConsoleWriter` for zerolog console output;
+  - `NewLogger` for a base zerolog logger suitable for `Manager.Configure`.
+- Kept rotating file output out of logcopter. That remains a Glazed/application concern because it pulls in policy-heavy dependencies and retention decisions.
+- Added `pkg/logcopter/output_test.go` covering stream/format selection and JSON output.
+- Added a caller propagation test to `pkg/logcopter/manager_test.go`.
+- Added `cmd/logcopter-gen/integration_test.go`, which writes generated source into a temporary module with a local `replace` to the workspace checkout and verifies `go test ./...` succeeds.
+- Updated `tasks.md` Phase 3/4/5 checkboxes.
+
+### Why
+
+The runtime should offer lightweight helpers for common zerolog construction without absorbing all of Glazed's output policy. The generator also needed one end-to-end compile test so rendered source does not merely look correct but is accepted by the Go toolchain.
+
+### Validation
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
+go test ./...
+```
+
+Result: passed.
