@@ -21,7 +21,7 @@
 - [ ] Implement level parsing and hierarchical area lookup.
 - [ ] Implement reload-aware manager and logger wrapper.
 - [ ] Implement `cmd/logcopter-gen` generator.
-- [ ] Implement Glazed adapter package.
-- [ ] Add runtime, generator, and Glazed integration tests.
+- [ ] Modify Glazed's existing `pkg/cmds/logging` section and initialization to configure logcopter area levels.
+- [ ] Add runtime, generator, and in-place Glazed logging integration tests.
 - [ ] Add examples and README documentation.
-- [ ] Verify Glazed config-file support for `areas` map vs `log-area` string-list syntax.
+- [ ] Verify Glazed config-file support for `logging.areas` map plus `--log-area area=level` CLI syntax.

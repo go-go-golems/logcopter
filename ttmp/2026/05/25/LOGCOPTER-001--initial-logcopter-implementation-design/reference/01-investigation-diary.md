@@ -20,6 +20,8 @@ RelatedFiles:
       Note: Research evidence for diary Step 2
     - Path: glazed/pkg/cmds/logging/section.go
       Note: Research evidence for diary Step 2
+    - Path: glazed/pkg/doc/topics/logging-section.md
+      Note: Documentation file named in Step 6 as part of in-place Glazed logging integration
     - Path: logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/sources/01-log-chatgpt-proposal.md
       Note: Imported source proposal read during Step 1
     - Path: pinocchio/cmd/pinocchio/main.go
@@ -31,6 +33,7 @@ LastUpdated: 2026-05-25T09:55:00-04:00
 WhatFor: Use this to understand how the implementation guide was produced and how to continue the ticket.
 WhenToUse: When reviewing, extending, or implementing the LOGCOPTER-001 design.
 ---
+
 
 
 
@@ -527,5 +530,95 @@ Ticket files updated:
 ```text
 /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
 /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/design-doc/01-initial-logcopter-implementation-guide.md
+/home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
+```
+
+## Step 6: Redirect Glazed integration from a logcopter adapter to in-place Glazed logging changes
+
+I updated the implementation guide after the product direction changed: logcopter should be mostly a utility package, while Glazed remains the shared command-line and configuration integration layer. Since the surrounding applications already depend on Glazed, a separate `pkg/glazedlogging` package inside logcopter would add an unnecessary extra abstraction and migration path.
+
+The revised design now says that logcopter should provide the runtime manager, logger wrapper, level parsing, area resolution, and generator. Glazed's existing `pkg/cmds/logging` package should be modified in-place to expose logcopter area-level configuration through the existing `logging.NewLoggingSection`, `logging.AddLoggingSectionToRootCommand`, `logging.InitLoggerFromCobra`, `logging.SetupLoggingFromValues`, and `logging.InitEarlyLoggingFromArgs` APIs.
+
+### Prompt Context
+
+**User prompt (verbatim):** "we don't need the glazed layer command part of logcopter, this is mostly a utility package, all my software still depends on glazed. Rather, we should modify the logger section and initialization of glazed to support logcopter features and configuration. Update the document accordingly"
+
+**Assistant interpretation:** Revise the LOGCOPTER-001 design so logcopter does not include a Glazed adapter package; instead, Glazed's existing logging section and initialization should grow logcopter support.
+
+**Inferred user intent:** The user wants fewer packages and fewer dependency edges: logcopter remains a utility, and Glazed remains the single command/config integration point for applications.
+
+**Commit (code):** N/A — documentation-only update.
+
+### What I did
+
+- Updated the design guide's scope to remove the `pkg/glazedlogging` deliverable.
+- Removed the proposed logcopter `pkg/glazedlogging` package from the package layout.
+- Replaced the old "Glazed integration design" section with "Glazed logging package changes".
+- Specified in-place changes to:
+  - `glazed/pkg/cmds/logging/section.go`
+  - `glazed/pkg/cmds/logging/init.go`
+  - `glazed/pkg/cmds/logging/init-early.go`
+  - `glazed/pkg/doc/topics/logging-section.md`
+- Updated the implementation phase formerly called "Glazed adapter" to "Update Glazed logging package".
+- Updated acceptance criteria, risks, review checklist, and tasks to reference Glazed's existing logging package instead of a separate adapter.
+- Updated the ticket index conclusion to say there should be no logcopter Glazed adapter package.
+
+### Why
+
+All relevant applications already depend on Glazed, and Glazed already owns command sections, root logging flags, Cobra parsing, early logging initialization, and config-file/env conventions. Keeping that behavior in Glazed avoids forcing application code to choose between two logging integration packages.
+
+### What worked
+
+The document now has a cleaner dependency story:
+
+```text
+applications -> glazed/pkg/cmds/logging -> logcopter runtime
+applications -> logcopter generated package loggers
+logcopter runtime -> zerolog
+```
+
+There is no longer a proposed `logcopter/pkg/glazedlogging` dependency path.
+
+### What didn't work
+
+N/A. This was a direct documentation revision.
+
+### What I learned
+
+The correct split is not "logcopter owns a Glazed adapter". The correct split is "logcopter owns logging mechanics, Glazed owns command/config integration". That also matches the previous Clay deprecation step: logging and config are Glazed territory.
+
+### What was tricky to build
+
+The tricky part was preserving the useful details from the old adapter design without keeping the adapter itself. The revised document still keeps the root flag shape, early parser behavior, and settings pseudocode, but places them under `glazed/pkg/cmds/logging` files.
+
+### What warrants a second pair of eyes
+
+- Verify that Glazed should depend on logcopter directly, rather than receiving logcopter behavior through an optional interface or build tag.
+- Verify how `logging.areas` map decoding should be implemented in Glazed's config-file pipeline.
+
+### What should be done in the future
+
+- When implementation starts, modify Glazed's existing logging package before updating Pinocchio or other applications.
+- Keep logcopter free of Glazed imports.
+- Add cross-repo tests or smoke examples that prove existing Glazed logging setup calls now configure logcopter area levels.
+
+### Code review instructions
+
+- Review `design-doc/01-initial-logcopter-implementation-guide.md`, especially "Glazed logging package changes" and "Phase 4: Update Glazed logging package".
+- Confirm no implementation plan requires a `pkg/glazedlogging` package in logcopter.
+- Validate the ticket with:
+
+```bash
+docmgr doctor --ticket LOGCOPTER-001 --stale-after 30
+```
+
+### Technical details
+
+Ticket files changed in this step:
+
+```text
+/home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/design-doc/01-initial-logcopter-implementation-guide.md
+/home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/index.md
+/home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
 /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
 ```

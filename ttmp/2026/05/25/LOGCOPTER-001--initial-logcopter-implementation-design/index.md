@@ -16,7 +16,7 @@ ExternalSources:
     - sources/01-log-chatgpt-proposal.md
 Summary: "Ticket workspace for the initial logcopter design and implementation guide."
 LastUpdated: 2026-05-25T09:55:00-04:00
-WhatFor: "Track the design and future implementation of logcopter's zerolog-backed area-scoped logging runtime, generator, and Glazed adapter."
+WhatFor: "Track the design and future implementation of logcopter's zerolog-backed area-scoped logging runtime, generator, and in-place Glazed logging integration."
 WhenToUse: "Use before implementing or reviewing the initial logcopter release."
 ---
 
@@ -61,7 +61,7 @@ The design/research deliverable is complete. Implementation has not started. The
 - Logcopter should keep `zerolog` as the backend.
 - Generated package loggers must be reload-aware wrappers, not raw `zerolog.Logger` values.
 - Normal filtering should use per-area child logger levels, not `zerolog.SetGlobalLevel`.
-- The Glazed adapter should mirror Glazed's section and Cobra initialization UX while avoiding Glazed's current global-level filtering path.
+- Logcopter should not ship a Glazed adapter package; Glazed's existing `pkg/cmds/logging` section and initialization should be updated in-place to configure logcopter.
 - Pinocchio demonstrates why an early logging initializer is useful before dynamic command discovery.
 
 ## Topics

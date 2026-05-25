@@ -32,3 +32,14 @@ Preliminary dependency cleanup: deprecated Clay logging/config init helpers in f
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/design-doc/01-initial-logcopter-implementation-guide.md — Added preliminary implementation phase
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 5 diary entry
 
+
+## 2026-05-25
+
+Updated design: logcopter remains a utility package while Glazed's existing logging section/init gain logcopter configuration support
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/design-doc/01-initial-logcopter-implementation-guide.md — Replaced separate Glazed adapter design with in-place Glazed logging package changes
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 6 design redirection
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Updated implementation tasks for Glazed logging package changes
+

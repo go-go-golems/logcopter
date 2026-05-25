@@ -24,6 +24,8 @@ RelatedFiles:
       Note: Existing zerolog initialization and global-level behavior
     - Path: glazed/pkg/cmds/logging/section.go
       Note: Existing Glazed logging section and root flag wiring
+    - Path: glazed/pkg/doc/topics/logging-section.md
+      Note: Glazed logging documentation to update with logcopter area-level config
     - Path: logcopter/cmd/XXX/main.go
       Note: Current empty command placeholder to replace with logcopter-gen
     - Path: logcopter/go.mod
@@ -38,9 +40,10 @@ ExternalSources:
     - ../sources/01-log-chatgpt-proposal.md
 Summary: 'Design and implementation guide for the first logcopter release: a zerolog-backed, code-generated, area-scoped logging system with Glazed command integration.'
 LastUpdated: 2026-05-25T09:55:00-04:00
-WhatFor: Use this when implementing the initial logcopter runtime, generator, and Glazed integration.
+WhatFor: Use this when implementing the initial logcopter runtime, generator, and Glazed logging-section integration.
 WhenToUse: Before writing the first production code or reviewing an intern implementation.
 ---
+
 
 
 
@@ -87,7 +90,7 @@ err := logcopter.Configure(baseLogger, logcopter.Config{
 
 The important implementation constraint is that normal filtering must use per-area child logger levels, not `zerolog.SetGlobalLevel`. Glazed currently uses `SetGlobalLevel` for one global CLI level; that works for today's single-level CLI behavior, but it cannot support `trace` in one package while keeping another package at `warn`. Logcopter should use the global level only as an optional emergency clamp and leave it permissive by default.
 
-This guide is written for a new intern. It explains the existing repository state, how Glazed logging works today, the proposed logcopter architecture, the public APIs, the generator, the Glazed adapter, test strategy, and a phased implementation plan.
+This guide is written for a new intern. It explains the existing repository state, how Glazed logging works today, the proposed logcopter architecture, the public APIs, the generator, the required changes to Glazed's existing logging package, test strategy, and a phased implementation plan.
 
 ## Problem statement and scope
 
@@ -108,7 +111,7 @@ The initial version should include:
 
 1. A `pkg/logcopter` runtime package.
 2. A `cmd/logcopter-gen` generator that writes generated logger files.
-3. A `pkg/glazedlogging` or similarly named Glazed adapter package.
+3. Updates to Glazed's existing `pkg/cmds/logging` section and initialization code so Glazed can configure logcopter area levels directly.
 4. Unit tests for level parsing, inheritance, reload, known areas, and invalid reload behavior.
 5. Generator tests for package path to area conversion and generated source validity.
 6. Basic CLI smoke tests for the generator.
@@ -166,7 +169,7 @@ The proposal also highlights the crucial runtime design: the generated variable 
 
 ## How Glazed logging works today
 
-Understanding Glazed matters because logcopter should integrate with Glazed-style command sections instead of inventing a completely separate CLI pattern.
+Understanding Glazed matters because logcopter should remain mostly a utility package while Glazed remains the CLI and configuration integration layer used by the surrounding applications.
 
 ### Glazed's logging section
 
@@ -235,9 +238,9 @@ Pinocchio then initializes help, calls `clay.InitGlazed("pinocchio", rootCmd)`, 
 
 ### How Glazed sections attach to Cobra
 
-The generic section implementation is important for the logcopter adapter. `schema.SectionImpl` implements `schema.CobraSection` (`glazed/pkg/cmds/schema/section-impl.go:21-22`). `AddSectionToCobraCommand` delegates to `Definitions.AddFieldsToCobraCommand` and then registers a flag group (`section-impl.go:216-227`). The Cobra parser iterates all sections and calls `AddSectionToCobraCommand` for every `CobraSection` (`glazed/pkg/cli/cobra-parser.go:221-240`).
+The generic section implementation is useful background for updating Glazed's existing logging section. `schema.SectionImpl` implements `schema.CobraSection` (`glazed/pkg/cmds/schema/section-impl.go:21-22`). `AddSectionToCobraCommand` delegates to `Definitions.AddFieldsToCobraCommand` and then registers a flag group (`section-impl.go:216-227`). The Cobra parser iterates all sections and calls `AddSectionToCobraCommand` for every `CobraSection` (`glazed/pkg/cli/cobra-parser.go:221-240`).
 
-A logcopter Glazed integration should therefore expose a normal Glazed section for per-command use and a root persistent flag helper for root command use, mirroring the existing logging package.
+Logcopter should not ship its own Glazed section package. Instead, Glazed's existing `pkg/cmds/logging` package should grow the logcopter-aware fields and initialization behavior in-place, preserving the current imports used by applications.
 
 ## Proposed architecture
 
@@ -270,16 +273,13 @@ logcopter/
     output.go          # output writer construction: stderr/stdout/file/text/json
     areas.go           # area validation, normalization, longest-prefix lookup
     global.go          # default manager package-level helpers
-  pkg/glazedlogging/
-    section.go         # Glazed section and settings struct
-    init.go            # InitFromCobra, InitFromValues, InitEarlyFromArgs
   cmd/logcopter-gen/
     main.go            # generator CLI
     packages.go        # go/packages discovery and area derivation
     render.go          # generated file rendering
 ```
 
-Keep the runtime package independent from Glazed. Glazed integration should depend on `pkg/logcopter`, not the other way around.
+Keep the logcopter runtime package independent from Glazed. Glazed may import `pkg/logcopter` from its existing `pkg/cmds/logging` package, but `pkg/logcopter` must not import Glazed.
 
 ### Runtime manager model
 
@@ -692,13 +692,24 @@ go test ./...
 
 CI should run the generator in `-check` mode to verify generated files are current.
 
-## Glazed integration design
+## Glazed logging package changes
 
 ### Design goal
 
-The Glazed adapter should feel like the existing Glazed logging package, but initialize logcopter's manager instead of only setting a global zerolog level.
+Logcopter should remain mostly a utility package: runtime manager, logger wrapper, level resolution, and generator. The command-line/config-file integration should live in Glazed because the surrounding applications already depend on Glazed and already import `github.com/go-go-golems/glazed/pkg/cmds/logging`.
 
-Existing Glazed APIs to mirror:
+Therefore, do **not** create a `pkg/glazedlogging` package in logcopter. Instead, modify Glazed's existing logging package in-place:
+
+- `glazed/pkg/cmds/logging/section.go` should expose logcopter-aware settings fields.
+- `glazed/pkg/cmds/logging/init.go` should build the zerolog base logger and configure logcopter's default manager.
+- `glazed/pkg/cmds/logging/init-early.go` should parse the additional area-level flags during early bootstrap.
+- Existing application code should keep calling `logging.AddLoggingSectionToRootCommand(...)` and `logging.InitLoggerFromCobra(...)`.
+
+This keeps dependency direction clean: applications depend on Glazed; Glazed depends on the small logcopter utility package; logcopter does not depend on Glazed.
+
+### Existing Glazed APIs to evolve
+
+Keep these function names and call sites stable where practical:
 
 - `logging.NewLoggingSection()` (`glazed/pkg/cmds/logging/section.go:24-64`)
 - `logging.AddLoggingSectionToRootCommand(rootCmd, appName)` (`section.go:78-99`)
@@ -706,54 +717,39 @@ Existing Glazed APIs to mirror:
 - `logging.SetupLoggingFromValues(parsedValues)` (`section.go:102-108`)
 - `logging.InitEarlyLoggingFromArgs(args, appName)` (`glazed/pkg/cmds/logging/init-early.go:62-107`)
 
-### Adapter package
+The implementation behind those functions changes, but users should not need to import a new adapter package.
 
-Use a separate package such as:
+### LoggingSettings changes
 
-```text
-github.com/go-go-golems/logcopter/pkg/glazedlogging
-```
-
-Avoid naming the package `logging`, because consuming code may import both Glazed's current `logging` package and the logcopter adapter during migration.
-
-### Settings struct
+Extend Glazed's current settings struct in `glazed/pkg/cmds/logging/section.go` instead of defining a parallel settings type in logcopter:
 
 ```go
-type Settings struct {
-    WithCaller  bool     `glazed:"with-caller"`
-    LogLevel    string   `glazed:"log-level"`
-    LogFormat   string   `glazed:"log-format"`
-    LogFile     string   `glazed:"log-file"`
-    LogToStdout bool     `glazed:"log-to-stdout"`
-    AreaLevels  []string `glazed:"log-area"`
-    StrictAreas bool     `glazed:"strict-log-areas"`
+type LoggingSettings struct {
+    WithCaller  bool              `glazed:"with-caller"`
+    LogLevel    string            `glazed:"log-level"`
+    LogFormat   string            `glazed:"log-format"`
+    LogFile     string            `glazed:"log-file"`
+    LogToStdout bool              `glazed:"log-to-stdout"`
+
+    // CLI-friendly repeatable form: --log-area app.view=debug
+    LogAreas    []string          `glazed:"log-area"`
+
+    // Config-file-friendly form:
+    // logging:
+    //   areas:
+    //     app.view: debug
+    //     app.db: warn
+    Areas       map[string]string `glazed:"areas" yaml:"areas" json:"areas"`
+
+    StrictAreas bool              `glazed:"strict-log-areas" yaml:"strict_areas" json:"strict_areas"`
 }
 ```
 
-Why `AreaLevels []string`? Glazed Cobra flags have first-class support for string lists. A CLI user can pass repeated or comma-style values depending on Glazed/Cobra behavior:
+Implementation note: if Glazed's generic section decoder cannot populate `map[string]string` directly, keep the public config shape and add a logging-specific normalization step that accepts raw config maps before or during `GetLoggingSettings`. Do not push this complexity into logcopter. Logcopter should receive a plain `logcopter.Config`.
 
-```bash
-myapp --log-level info --log-area app.view=debug --log-area app.view.render=trace
-```
+### Root command flags
 
-Native YAML config should still support the source proposal's map shape:
-
-```yaml
-logging:
-  level: info
-  areas:
-    app.view: debug
-    app.view.render: trace
-```
-
-For the adapter's first version, support both:
-
-- `log-area` / `AreaLevels` for CLI and simple Glazed section decoding;
-- `areas` map when loading a native `logcopter.Config` directly.
-
-If Glazed's config-file middleware can decode a map into a section field reliably, add an `Areas map[string]string` field and tests. If it cannot, keep map support in native config and document `log-area` for Glazed command flags.
-
-### Root command helper
+Update `logging.AddLoggingSectionToRootCommand` in Glazed to keep existing flags and add area-aware flags:
 
 ```go
 func AddLoggingSectionToRootCommand(rootCmd *cobra.Command, appName string) error {
@@ -768,77 +764,97 @@ func AddLoggingSectionToRootCommand(rootCmd *cobra.Command, appName string) erro
 }
 ```
 
-This intentionally mirrors Glazed's current helper while adding area-aware options.
+The `appName` argument remains useful for compatibility and future help text/env conventions, even if the current helper only needs it indirectly.
 
-### Initialization from Cobra
+### Initialization from Cobra and parsed values
 
-Pseudocode:
+`logging.InitLoggerFromCobra(cmd)` should continue to read Cobra flags, then call `logging.InitLoggerFromSettings(settings)`. The difference is that `InitLoggerFromSettings` should now configure logcopter's default manager after constructing the zerolog base logger.
+
+Pseudocode for Glazed's `pkg/cmds/logging/init.go`:
 
 ```go
-func InitLoggerFromCobra(cmd *cobra.Command) error {
-    s, err := ReadSettingsFromCobra(cmd)
+func InitLoggerFromSettings(s *LoggingSettings) error {
+    writer, err := buildWriter(s.LogFormat, s.LogFile, s.LogToStdout)
     if err != nil {
         return err
     }
-    return InitLoggerFromSettings(s)
-}
 
-func InitLoggerFromSettings(s *Settings) error {
-    writer, err := BuildWriter(OutputOptions{
-        Format:      s.LogFormat,
-        File:        s.LogFile,
-        AlsoStdout:  s.LogToStdout,
-    })
-    if err != nil { return err }
+    base := zerolog.New(writer).With().Timestamp().Logger()
+    if s.WithCaller {
+        base = base.With().Caller().Logger()
+    }
 
-    base := zerolog.New(writer)
-    if s.Timestamp { base = base.With().Timestamp().Logger() }
-    if s.WithCaller { base = base.With().Caller().Logger() }
+    areas, err := normalizeAreas(s.Areas, s.LogAreas)
+    if err != nil {
+        return err
+    }
 
-    cfg := logcopter.Config{
+    return logcopter.Configure(base, logcopter.Config{
         Level:       s.LogLevel,
         Format:      s.LogFormat,
         Caller:      s.WithCaller,
-        Areas:       parseAreaLevels(s.AreaLevels),
+        Areas:       areas,
         StrictAreas: s.StrictAreas,
-    }
-    return logcopter.Configure(base, cfg)
+    })
 }
 ```
 
+This should replace normal use of `zerolog.SetGlobalLevel`. If Glazed keeps a global-level clamp for legacy behavior, it must not prevent a configured area from emitting `trace` or `debug`. The safe default is to leave the global level permissive and let per-area child loggers filter.
+
 ### Early initialization
 
-Mirror Pinocchio's current pattern. The early parser should ignore unknown flags because commands may not be registered yet. Add `--log-area` and `--strict-log-areas` to the allowlist.
+Update `glazed/pkg/cmds/logging/init-early.go` so early parsing recognizes the same new flags as the root helper:
+
+- `--log-area area=level`
+- repeated `--log-area` values
+- `--strict-log-areas`
+
+The early path should still ignore unknown flags because complex apps such as Pinocchio load commands dynamically before full Cobra parsing.
 
 ```mermaid
 flowchart LR
     A[os.Args] --> B[filter to logging flags only]
     B --> C[pflag FlagSet]
-    C --> D[Settings]
+    C --> D[LoggingSettings]
     D --> E[logcopter.Configure]
-    E --> F[command discovery logs respect early level]
+    E --> F[command discovery logs respect early area levels]
 ```
 
-This allows applications like Pinocchio to get debug logs during repository loading and command discovery.
+### Application usage after the change
 
-### Using logcopter in a Glazed application
+Existing application code should continue to look like normal Glazed logging setup:
 
 ```go
 var rootCmd = &cobra.Command{
     Use: "myapp",
     PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-        return glazedlogging.InitLoggerFromCobra(cmd)
+        return logging.InitLoggerFromCobra(cmd)
     },
 }
 
 func main() {
-    // Optional early init before dynamic command loading.
-    _ = glazedlogging.InitEarlyLoggingFromArgs(os.Args[1:], "myapp")
-
-    cobra.CheckErr(glazedlogging.AddLoggingSectionToRootCommand(rootCmd, "myapp"))
-    // register Glazed commands
+    _ = logging.InitEarlyLoggingFromArgs(os.Args[1:], "myapp") // optional
+    cobra.CheckErr(logging.AddLoggingSectionToRootCommand(rootCmd, "myapp"))
     cobra.CheckErr(rootCmd.Execute())
 }
+```
+
+Area-level configuration can come from flags:
+
+```bash
+myapp --log-level info --log-area app.view=debug --log-area app.view.render=trace
+```
+
+or from config files:
+
+```yaml
+logging:
+  log-level: info
+  log-format: text
+  areas:
+    app.view: debug
+    app.view.render: trace
+    app.db: warn
 ```
 
 ## Implementation phases
@@ -927,7 +943,7 @@ Implement writer construction for:
 - JSON format;
 - optional file logging with rotation.
 
-Do not mix output construction deeply into manager logic. Keep output as a helper so Glazed integration and native config paths can share it.
+Do not mix output construction deeply into manager logic. Keep output as a helper so Glazed's existing logging initialization and native logcopter config paths can share it.
 
 ### Phase 3: Generator
 
@@ -960,25 +976,27 @@ Generator tests:
 - generated source is gofmt-formatted;
 - generated source compiles in a temp module.
 
-### Phase 4: Glazed adapter
+### Phase 4: Update Glazed logging package
 
-Files:
+Files in the local Glazed checkout:
 
 ```text
-pkg/glazedlogging/section.go
-pkg/glazedlogging/init.go
-pkg/glazedlogging/init_early.go
+glazed/pkg/cmds/logging/section.go
+glazed/pkg/cmds/logging/init.go
+glazed/pkg/cmds/logging/init-early.go
+glazed/pkg/doc/topics/logging-section.md
 ```
 
 Implement:
 
-- `NewLoggingSection()` equivalent with extra area flags;
-- `AddLoggingSectionToRootCommand()` persistent flags;
-- `InitLoggerFromCobra()`;
-- `SetupLoggingFromValues()`;
-- `InitEarlyLoggingFromArgs()`.
+- extend `LoggingSettings` with `log-area`, `areas`, and `strict-log-areas`;
+- add persistent root flags for area overrides and strict area validation;
+- update `InitLoggerFromSettings()` to configure logcopter's default manager;
+- update `InitLoggerFromCobra()` and `SetupLoggingFromValues()` to pass area settings through;
+- update `InitEarlyLoggingFromArgs()` to parse the new flags before command discovery;
+- document the new CLI and config-file shapes in Glazed docs.
 
-Test against local Glazed packages from the workspace.
+Test in Glazed and at least one application such as Pinocchio, because this is now an in-place change to the shared Glazed logging package rather than a separate logcopter adapter.
 
 ### Phase 5: Documentation and examples
 
@@ -1010,7 +1028,7 @@ The initial implementation is complete when:
 5. A config can set `app.view.render=trace` while keeping `app.db=warn`.
 6. A logger created before `Configure` observes config applied later.
 7. Calling `Configure` with an invalid area level returns an error and keeps the previous valid state.
-8. Glazed-style root command setup can configure output, format, caller, default level, and area overrides.
+8. Glazed's existing root command logging setup can configure output, format, caller, default level, and area overrides without importing a separate logcopter Glazed adapter package.
 9. `Areas()` returns generated/registered areas.
 10. Documentation clearly states that `Raw()` is not reload-aware after capture.
 
@@ -1022,7 +1040,7 @@ If any code calls `zerolog.SetGlobalLevel(zerolog.InfoLevel)`, `trace` and `debu
 
 Mitigation:
 
-- logcopter's Glazed adapter should not call Glazed's current `InitLoggerFromSettings`;
+- Glazed's updated `InitLoggerFromSettings` should stop using `zerolog.SetGlobalLevel` as the normal filtering mechanism when logcopter area levels are enabled;
 - document that applications using logcopter should leave global level at `trace` or avoid changing it;
 - optionally set `zerolog.SetGlobalLevel(zerolog.TraceLevel)` inside logcopter configuration only if the team agrees this is acceptable process-wide behavior.
 
@@ -1048,7 +1066,7 @@ Mitigation:
 
 ### Glazed config map shape
 
-The native source proposal wants `logging.areas` as a map. Glazed's existing logging section is flag-oriented and currently has only scalar/string-list-style fields. The first adapter may need `--log-area area=level` for CLI friendliness while native config supports a map.
+The native source proposal wants `logging.areas` as a map. Glazed's existing logging section is flag-oriented and currently has only scalar/string-list-style fields. Updating Glazed should support both a CLI-friendly repeatable `--log-area area=level` flag and a config-file-friendly `logging.areas` map, using a logging-specific normalizer if the generic field system cannot decode maps directly.
 
 Mitigation:
 
@@ -1065,7 +1083,7 @@ Start review in this order:
 3. `pkg/logcopter/level.go` — level aliases and errors.
 4. `cmd/logcopter-gen/packages.go` — area derivation correctness.
 5. `cmd/logcopter-gen/render.go` — generated code stability.
-6. `pkg/glazedlogging/init.go` — no accidental `zerolog.SetGlobalLevel` use for normal filtering.
+6. `glazed/pkg/cmds/logging/init.go` — no accidental `zerolog.SetGlobalLevel` use for normal area filtering after logcopter integration.
 7. Tests for invalid reload and pre-config package loggers.
 
 Validation commands:
