@@ -92,3 +92,18 @@ Phase 1 runtime primitives: implemented level parsing and area resolution helper
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 10 runtime primitives diary
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Marked Phase 1 tasks complete
 
+
+## 2026-05-25
+
+Phase 2/3 runtime: implemented reload-aware manager and logger wrapper
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/config.go — Runtime Config and AreaWarning types
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/global.go — Default manager package helpers
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/logger.go — Reload-aware zerolog-style Logger wrapper
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/manager.go — Manager state snapshots
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/manager_test.go — Manager reload
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 11 manager/logger diary
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Marked Phase 2 and Phase 3 progress
+

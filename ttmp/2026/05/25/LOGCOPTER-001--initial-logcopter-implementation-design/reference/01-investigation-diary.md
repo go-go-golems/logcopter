@@ -997,3 +997,122 @@ logcopter/pkg/logcopter/areas_test.go
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
 ```
+
+## Step 11: Phase 2 and 3 manager plus logger wrapper
+
+I implemented the reload-aware runtime manager and the public `Logger` wrapper methods together because the manager's main public entrypoint is `Package(area) Logger`. Splitting those across separate commits would have left an awkward incomplete API.
+
+The implementation now supports no-op pre-configuration package loggers, atomic state replacement on successful config reload, invalid reload protection, known-area registration, effective level lookup, and zerolog-style event methods on the wrapper.
+
+### Prompt Context
+
+**User prompt (verbatim):** (same as Step 8)
+
+**Assistant interpretation:** Continue implementing the task list after Phase 1 primitives.
+
+**Inferred user intent:** Build the core runtime behavior before moving to output helpers, generator, and Glazed integration.
+
+**Commit (code):** pending at the time this step text was written.
+
+### What I did
+
+- Added `pkg/logcopter/config.go` with `Config` and `AreaWarning`.
+- Added `pkg/logcopter/manager.go` with:
+  - `Manager`;
+  - immutable `state` snapshots behind `atomic.Value`;
+  - `Configure`;
+  - `Package` / `For`;
+  - known-area registration;
+  - `Areas`, `EffectiveLevel`, and `ValidateAreas`.
+- Added `pkg/logcopter/global.go` with default-manager package functions.
+- Added `pkg/logcopter/logger.go` with:
+  - `Trace`, `Debug`, `Info`, `Warn`, `Error`, `Fatal`, `Panic`, and `WithLevel`;
+  - `Raw`, `Area`, and `IsZero`.
+- Added `pkg/logcopter/manager_test.go` covering:
+  - logger created before `Configure` works after configuration;
+  - pre-configuration logs are no-op;
+  - area field is emitted;
+  - per-area level filtering;
+  - reload affecting existing wrappers;
+  - invalid reload keeping previous state;
+  - area listing and effective level lookup;
+  - strict area validation.
+- Ran `go test ./...`.
+- Marked Phase 2 and most Phase 3 tasks complete in `tasks.md`.
+
+### Why
+
+The core promise of logcopter is that generated package loggers can be package-level variables and still observe future configuration/reload changes. That requires wrapper methods resolving through the manager at event creation time.
+
+### What worked
+
+The tests passed:
+
+```text
+?   	github.com/go-go-golems/logcopter/cmd/logcopter-gen	[no test files]
+ok  	github.com/go-go-golems/logcopter/pkg/logcopter	0.002s
+```
+
+### What didn't work
+
+The first build failed because zerolog event methods have pointer receivers and cannot be called directly on a non-addressable `zerolog.Logger` returned from `l.raw()`:
+
+```text
+pkg/logcopter/logger.go:12:17: cannot call pointer method Trace on zerolog.Logger
+pkg/logcopter/logger.go:16:17: cannot call pointer method Debug on zerolog.Logger
+...
+```
+
+I fixed this by storing the returned logger in a local variable before calling the pointer receiver methods:
+
+```go
+func (l Logger) Debug() *zerolog.Event {
+    logger := l.raw()
+    return logger.Debug()
+}
+```
+
+### What I learned
+
+The wrapper API can stay very small while preserving zerolog's normal event chaining. It is also important that invalid area names produce no-op loggers instead of panicking during package initialization.
+
+### What was tricky to build
+
+The tricky state-management part is known-area registration. `Package(area)` may be called during package initialization before `Configure`, and `Configure` may be called later. I used a manager mutex around state replacement/known-area registration and `atomic.Value` for read-side state access.
+
+### What warrants a second pair of eyes
+
+- Review whether `configuredAreaMatchesKnown` should match both directions (`configured parent of known area` and `configured child of known area`) or only parent-to-known. The current implementation accepts both exact/parent/descendant relationships.
+- Review whether invalid area loggers should expose their error somehow beyond becoming no-op loggers.
+- Review whether `ValidateAreas(strict bool)` should use the `strict` argument for behavior or whether the caller should decide how to interpret returned warnings.
+
+### What should be done in the future
+
+- Add caller-output tests once caller skip behavior is designed.
+- Add benchmarks before introducing any logger cache.
+- Build output construction helpers or decide output construction stays entirely in Glazed.
+
+### Code review instructions
+
+- Start with `pkg/logcopter/manager.go` to review state and reload behavior.
+- Then review `pkg/logcopter/logger.go` to confirm every event method resolves at call time.
+- Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
+go test ./...
+```
+
+### Technical details
+
+Files changed in this step:
+
+```text
+logcopter/pkg/logcopter/config.go
+logcopter/pkg/logcopter/manager.go
+logcopter/pkg/logcopter/global.go
+logcopter/pkg/logcopter/logger.go
+logcopter/pkg/logcopter/manager_test.go
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
+logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
+```

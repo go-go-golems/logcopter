@@ -41,25 +41,25 @@
 
 ## Phase 2 — Reload-aware runtime manager
 
-- [ ] Create `pkg/logcopter/config.go` with `Config` and `AreaWarning`.
-- [ ] Create `pkg/logcopter/manager.go` with immutable state snapshots.
-- [ ] Create default manager in `pkg/logcopter/global.go`.
-- [ ] Implement `Configure(base zerolog.Logger, cfg Config) error`.
-- [ ] Ensure invalid reload does not replace the previous valid state.
-- [ ] Implement `Package(area string)` / `For(area string)` and known-area registration.
-- [ ] Implement `Areas()`, `EffectiveLevel(area)`, and `ValidateAreas(strict)`.
-- [ ] Test pre-configuration no-op behavior.
-- [ ] Test reload changes future log calls on existing wrappers.
-- [ ] Test unknown configured areas in warning and strict modes.
+- [x] Create `pkg/logcopter/config.go` with `Config` and `AreaWarning`.
+- [x] Create `pkg/logcopter/manager.go` with immutable state snapshots.
+- [x] Create default manager in `pkg/logcopter/global.go`.
+- [x] Implement `Configure(base zerolog.Logger, cfg Config) error`.
+- [x] Ensure invalid reload does not replace the previous valid state.
+- [x] Implement `Package(area string)` / `For(area string)` and known-area registration.
+- [x] Implement `Areas()`, `EffectiveLevel(area)`, and `ValidateAreas(strict)`.
+- [x] Test pre-configuration no-op behavior.
+- [x] Test reload changes future log calls on existing wrappers.
+- [x] Test unknown configured areas in warning and strict modes.
 
 ## Phase 3 — Logger wrapper API
 
-- [ ] Create `pkg/logcopter/logger.go`.
-- [ ] Implement `Trace`, `Debug`, `Info`, `Warn`, `Error`, `Fatal`, `Panic`, and `WithLevel`.
-- [ ] Implement `Raw() zerolog.Logger` with documentation that captured raw loggers are not reload-aware.
-- [ ] Implement `Area()` and `IsZero()` helpers.
-- [ ] Add tests that emitted events include the `area` field.
-- [ ] Add tests that disabled levels drop logs.
+- [x] Create `pkg/logcopter/logger.go`.
+- [x] Implement `Trace`, `Debug`, `Info`, `Warn`, `Error`, `Fatal`, `Panic`, and `WithLevel`.
+- [x] Implement `Raw() zerolog.Logger` with documentation that captured raw loggers are not reload-aware.
+- [x] Implement `Area()` and `IsZero()` helpers.
+- [x] Add tests that emitted events include the `area` field.
+- [x] Add tests that disabled levels drop logs.
 - [ ] Add caller-output test if `Caller()` support is enabled through the base logger.
 - [ ] Benchmark manager lookup overhead before adding any cache.
 
