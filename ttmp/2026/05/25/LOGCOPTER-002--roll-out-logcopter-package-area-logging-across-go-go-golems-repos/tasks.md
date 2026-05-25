@@ -1,0 +1,65 @@
+# Tasks
+
+## Phase 0 — Ticket setup and analysis
+
+- [x] Create LOGCOPTER-002 ticket workspace.
+- [x] Add primary design/implementation guide document.
+- [x] Add investigation diary document.
+- [x] Inspect current Glazed logcopter integration and dependency state.
+- [x] Inspect Pinocchio logging initialization entry points.
+- [x] Inspect representative Geppetto logging-heavy packages.
+- [x] Inspect Clay logging wrapper/deprecation state.
+- [x] Count current `github.com/rs/zerolog/log` usage by repository.
+- [x] Decide rollout starts with Glazed dependency cleanup and self-adoption.
+- [x] Define canonical area prefix convention: `go-go-golems.<repo>.<path-tail>`.
+
+## Phase 1 — Glazed first implementation pass
+
+- [ ] Update `glazed/go.mod` to require `github.com/go-go-golems/logcopter v0.0.1`.
+- [ ] Remove local `replace github.com/go-go-golems/logcopter => ../logcopter` from Glazed.
+- [ ] Run `go mod tidy` in Glazed.
+- [ ] Generate Glazed package loggers for `./pkg/...` with prefix `go-go-golems.glazed`.
+- [ ] Remove or alias `github.com/rs/zerolog/log` imports in converted Glazed packages.
+- [ ] Add generated-file check for Glazed package loggers.
+- [ ] Run targeted Glazed tests: `go test ./pkg/cmds/fields ./pkg/cmds/logging ./cmd/glaze`.
+- [ ] Run targeted tests for converted Glazed packages.
+- [ ] Smoke test `go run ./cmd/glaze --log-area go-go-golems.glazed.pkg.help=debug help logging-section-reference`.
+- [ ] Commit Glazed changes.
+
+## Phase 2 — Pinocchio rollout
+
+- [ ] Update Pinocchio to a Glazed version containing published logcopter integration.
+- [ ] Add direct `github.com/go-go-golems/logcopter v0.0.1` dependency.
+- [ ] Generate package loggers with prefix `go-go-golems.pinocchio`.
+- [ ] Convert package diagnostics away from global zerolog imports.
+- [ ] Replace touched `clay.InitGlazed` calls with direct Glazed logging setup.
+- [ ] Validate root `pinocchio` command bootstrap.
+- [ ] Validate `web-chat` and `simple-chat-agent` command bootstrap.
+
+## Phase 3 — Geppetto rollout
+
+- [ ] Add direct `github.com/go-go-golems/logcopter v0.0.1` dependency.
+- [ ] Generate package loggers with prefix `go-go-golems.geppetto` for `./pkg/...`.
+- [ ] Convert high-value AI provider packages first.
+- [ ] Convert inference tool/middleware/event packages.
+- [ ] Preserve explicit `zerolog.Logger` injection APIs.
+- [ ] Validate targeted Geppetto package tests.
+
+## Phase 4 — Clay rollout
+
+- [ ] Add direct `github.com/go-go-golems/logcopter v0.0.1` dependency.
+- [ ] Generate package loggers with prefix `go-go-golems.clay` for `./pkg/...`.
+- [ ] Convert watcher, repositories, filters, SQL, and workerpool diagnostics.
+- [ ] Keep Clay logging initialization helpers deprecated.
+- [ ] Validate `go test ./pkg/...`.
+
+## Phase 5 — Cross-repository validation and docs
+
+- [ ] Verify one `go-go-golems.glazed...` area can be verbose while default remains quiet.
+- [ ] Verify one `go-go-golems.pinocchio...` area can be configured through Pinocchio CLI.
+- [ ] Verify one `go-go-golems.geppetto...` area can be configured through a Pinocchio command path.
+- [ ] Verify Clay package diagnostics work when called by a Glazed-configured application.
+- [ ] Update repository READMEs or help docs with cross-repository area prefix examples.
+- [ ] Update LOGCOPTER-002 diary and changelog after each implementation phase.
+- [ ] Run `docmgr doctor --ticket LOGCOPTER-002 --stale-after 30`.
+- [ ] Upload final bundle to reMarkable.

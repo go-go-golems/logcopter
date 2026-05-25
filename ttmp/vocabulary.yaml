@@ -9,6 +9,12 @@ topics:
       description: glazed topic
     - slug: logcopter
       description: logcopter topic
+    - slug: clay
+      description: Clay repository and infrastructure helpers
+    - slug: geppetto
+      description: Geppetto LLM inference and agent library
+    - slug: pinocchio
+      description: Pinocchio CLI and LLM application repository
 docTypes:
     - slug: index
       description: index document type
