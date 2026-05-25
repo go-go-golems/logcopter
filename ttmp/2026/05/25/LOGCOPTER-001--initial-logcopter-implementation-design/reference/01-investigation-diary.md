@@ -1421,3 +1421,45 @@ glazed/cmd/glaze/main.go
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
 logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
 ```
+
+## Step 15: Upload updated help-doc bundle to reMarkable
+
+I uploaded an updated LOGCOPTER-001 bundle to reMarkable after adding the logcopter help entries and recording the Glaze loader work.
+
+### What I did
+
+Uploaded these files as one bundle:
+
+```text
+design-doc/01-initial-logcopter-implementation-guide.md
+tasks.md
+reference/01-investigation-diary.md
+logcopter/pkg/doc/topics/logcopter-logging-architecture.md
+logcopter/pkg/doc/tutorials/logcopter-package-logging.md
+```
+
+### Command
+
+```bash
+remarquee upload bundle \
+  logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/design-doc/01-initial-logcopter-implementation-guide.md \
+  logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md \
+  logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md \
+  logcopter/pkg/doc/topics/logcopter-logging-architecture.md \
+  logcopter/pkg/doc/tutorials/logcopter-package-logging.md \
+  --name "LOGCOPTER-001 Initial Logcopter Implementation Guide" \
+  --remote-dir "/ai/2026/05/25/LOGCOPTER-001" \
+  --toc-depth 2 \
+  --force \
+  --non-interactive
+```
+
+### Result
+
+```text
+OK: uploaded LOGCOPTER-001 Initial Logcopter Implementation Guide.pdf -> /ai/2026/05/25/LOGCOPTER-001
+```
+
+### Note
+
+The first upload attempt timed out after 180 seconds. Retrying with a longer timeout completed successfully.

@@ -147,3 +147,12 @@ Added Markdown-only logcopter help entries and loaded them from the Glaze binary
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 14 help docs diary
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Added Phase 6.5 help entry tasks
 
+
+## 2026-05-25
+
+Uploaded updated LOGCOPTER-001 bundle with logcopter help docs to reMarkable
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded reMarkable upload step
+
