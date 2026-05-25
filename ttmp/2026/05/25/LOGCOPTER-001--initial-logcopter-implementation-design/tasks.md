@@ -158,4 +158,4 @@
 - [x] Add `go generate` instructions.
 - [x] Add changelog entry for logcopter initial release.
 - [x] Add migration note for Glazed logging users.
-- [ ] Tag or prepare release once runtime, generator, and Glazed integration are validated.
+- [x] Tag or prepare release once runtime, generator, and Glazed integration are validated. Prepared release notes and generated-file CI; no tag was created pending review.
