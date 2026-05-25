@@ -431,6 +431,8 @@ Add task to the current ticket sa a preliminary step, then execute, commit at ap
 
 **Commit (code):** `be89279a0350bcaecd4a43a3c3cf690407e01a69` — "Deprecate Clay logging and config init helpers"
 
+**Commit (ticket docs):** `5f01060d9b77e0aba48b96546e55f8603ab13549` — "Document logcopter implementation planning"
+
 ### What I did
 
 - Inspected `clay/pkg/init.go` and confirmed `InitGlazed` only delegates to `logging.AddLoggingSectionToRootCommand(rootCmd, appName)`.
@@ -468,6 +470,13 @@ Logcopter should not depend on Clay for logging/config bootstrap. Clay's `InitGl
 ```text
 [task/logcopter be89279] Deprecate Clay logging and config init helpers
  2 files changed, 47 insertions(+), 15 deletions(-)
+```
+
+- The ticket documentation commit succeeded:
+
+```text
+[task/logcopter 5f01060] Document logcopter implementation planning
+ 8 files changed, 2724 insertions(+)
 ```
 
 ### What didn't work
