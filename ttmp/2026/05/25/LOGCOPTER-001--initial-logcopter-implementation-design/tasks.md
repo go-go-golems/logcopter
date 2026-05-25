@@ -61,7 +61,7 @@
 - [x] Add tests that emitted events include the `area` field.
 - [x] Add tests that disabled levels drop logs.
 - [x] Add caller-output test if `Caller()` support is enabled through the base logger.
-- [ ] Benchmark manager lookup overhead before adding any cache.
+- [x] Benchmark manager lookup overhead before adding any cache.
 
 ## Phase 4 — Output construction helpers
 

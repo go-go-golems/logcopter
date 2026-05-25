@@ -233,3 +233,14 @@ Ran final validation and uploaded refreshed LOGCOPTER-001 bundle to reMarkable
 
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded final validation and upload
 
+
+## 2026-05-25
+
+Added logcopter manager lookup benchmarks
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/logcopter/benchmark_test.go — Benchmarks disabled and enabled reload-aware logger paths
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 22
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Marked benchmark task complete
+

@@ -1684,3 +1684,21 @@ Result: passed.
 ```text
 OK: uploaded LOGCOPTER-001 Initial Logcopter Implementation Guide.pdf -> /ai/2026/05/25/LOGCOPTER-001
 ```
+
+## Step 22: Add manager lookup benchmarks
+
+I added benchmark coverage for the reload-aware logger path before introducing any cache.
+
+### What I did
+
+- Added `pkg/logcopter/benchmark_test.go`.
+- Added disabled-level and enabled-level benchmarks for repeated wrapper logging through a manager-managed logger.
+- Marked the remaining Phase 3 benchmark task complete.
+
+### Validation
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
+go test ./...
+go test ./pkg/logcopter -bench BenchmarkLoggerLookup -benchmem
+```
