@@ -721,7 +721,9 @@ The implementation behind those functions changes, but users should not need to 
 
 ### LoggingSettings changes
 
-Extend Glazed's current settings struct in `glazed/pkg/cmds/logging/section.go` instead of defining a parallel settings type in logcopter:
+Extend Glazed's current settings struct in `glazed/pkg/cmds/logging/section.go` instead of defining a parallel settings type in logcopter. Use Glazed's existing `fields.TypeKeyValue` for area overrides. That keeps the CLI shape typed as a key-value map instead of inventing a logging-specific string-list parser.
+
+Recommended struct shape:
 
 ```go
 type LoggingSettings struct {
@@ -731,10 +733,13 @@ type LoggingSettings struct {
     LogFile     string            `glazed:"log-file"`
     LogToStdout bool              `glazed:"log-to-stdout"`
 
-    // CLI-friendly repeatable form: --log-area app.view=debug
-    LogAreas    []string          `glazed:"log-area"`
+    // CLI-friendly repeatable key-value field:
+    //   --log-area app.view:debug --log-area app.db:warn
+    // After a small TypeKeyValue parser improvement, also accept:
+    //   --log-area app.view=debug --log-area app.db=warn
+    LogAreas    map[string]string `glazed:"log-area"`
 
-    // Config-file-friendly form:
+    // Config-file-friendly canonical form:
     // logging:
     //   areas:
     //     app.view: debug
@@ -745,11 +750,50 @@ type LoggingSettings struct {
 }
 ```
 
-Implementation note: if Glazed's generic section decoder cannot populate `map[string]string` directly, keep the public config shape and add a logging-specific normalization step that accepts raw config maps before or during `GetLoggingSettings`. Do not push this complexity into logcopter. Logcopter should receive a plain `logcopter.Config`.
+Recommended section fields:
+
+```go
+fields.New(
+    "log-area",
+    fields.TypeKeyValue,
+    fields.WithHelp("Per-area log level override, for example app.view:debug or app.view=debug; repeatable"),
+    fields.WithDefault(map[string]string{}),
+)
+fields.New(
+    "strict-log-areas",
+    fields.TypeBool,
+    fields.WithHelp("Fail when logging config references unknown generated/registered areas"),
+    fields.WithDefault(false),
+)
+```
+
+The canonical config-file shape should remain a nested map under `logging.areas`, because it is the clearest YAML representation:
+
+```yaml
+logging:
+  log-level: info
+  areas:
+    app.view: debug
+    app.view.render: trace
+    app.db: warn
+```
+
+A Glazed-key-value-compatible list form can also be accepted if it naturally falls out of config parsing:
+
+```yaml
+logging:
+  log-level: info
+  log-area:
+    - app.view:debug
+    - app.view.render:trace
+    - app.db:warn
+```
+
+Implementation note: current Glazed `TypeKeyValue` parsing is colon-based (`key:value`). Add support for `key=value` as a small compatibility improvement because command-line users commonly expect `--flag key=value` for map-style flags. The parser should accept both separators, reject strings that contain neither, and include the offending item in the error. Do not push this parsing complexity into logcopter. Logcopter should receive a plain `logcopter.Config` with `Areas map[string]string`.
 
 ### Root command flags
 
-Update `logging.AddLoggingSectionToRootCommand` in Glazed to keep existing flags and add area-aware flags:
+Update `logging.AddLoggingSectionToRootCommand` in Glazed to keep existing flags and add area-aware flags. Because the root helper registers persistent flags manually today, mirror `fields.TypeKeyValue` with a string-slice flag and parse it through the same key-value helper used by the section path:
 
 ```go
 func AddLoggingSectionToRootCommand(rootCmd *cobra.Command, appName string) error {
@@ -758,7 +802,7 @@ func AddLoggingSectionToRootCommand(rootCmd *cobra.Command, appName string) erro
     rootCmd.PersistentFlags().String("log-format", "text", "Log format (json, text)")
     rootCmd.PersistentFlags().Bool("with-caller", false, "Log caller information")
     rootCmd.PersistentFlags().Bool("log-to-stdout", false, "Log to stdout even when log-file is set")
-    rootCmd.PersistentFlags().StringArray("log-area", nil, "Area log level override in area=level form; repeatable")
+    rootCmd.PersistentFlags().StringSlice("log-area", nil, "Area log level override in area:level or area=level form; repeatable")
     rootCmd.PersistentFlags().Bool("strict-log-areas", false, "Fail when config references unknown log areas")
     return nil
 }
@@ -805,8 +849,8 @@ This should replace normal use of `zerolog.SetGlobalLevel`. If Glazed keeps a gl
 
 Update `glazed/pkg/cmds/logging/init-early.go` so early parsing recognizes the same new flags as the root helper:
 
-- `--log-area area=level`
-- repeated `--log-area` values
+- `--log-area area:level` and `--log-area area=level`
+- repeated or comma-separated `--log-area` values
 - `--strict-log-areas`
 
 The early path should still ignore unknown flags because complex apps such as Pinocchio load commands dynamically before full Cobra parsing.
@@ -842,7 +886,8 @@ func main() {
 Area-level configuration can come from flags:
 
 ```bash
-myapp --log-level info --log-area app.view=debug --log-area app.view.render=trace
+myapp --log-level info --log-area app.view:debug --log-area app.view.render:trace
+myapp --log-level info --log-area app.view=debug,app.db=warn
 ```
 
 or from config files:
@@ -858,6 +903,8 @@ logging:
 ```
 
 ## Implementation phases
+
+This section gives the narrative implementation order. The granular checklist is maintained in [`../tasks.md`](../tasks.md) and is included in the reMarkable bundle. Treat `tasks.md` as the execution checklist: it breaks the work into repository scaffold, runtime primitives, reload-aware manager, wrapper API, output helpers, generator, Glazed `TypeKeyValue` support, in-place Glazed logging integration, cross-repository validation, docs/examples, and release readiness.
 
 ### Preliminary step: keep logging and config initialization in Glazed
 
@@ -989,12 +1036,12 @@ glazed/pkg/doc/topics/logging-section.md
 
 Implement:
 
-- extend `LoggingSettings` with `log-area`, `areas`, and `strict-log-areas`;
-- add persistent root flags for area overrides and strict area validation;
+- extend `LoggingSettings` with a `fields.TypeKeyValue`-backed `log-area`, canonical config `areas`, and `strict-log-areas`;
+- add persistent root flags for key-value area overrides and strict area validation;
 - update `InitLoggerFromSettings()` to configure logcopter's default manager;
-- update `InitLoggerFromCobra()` and `SetupLoggingFromValues()` to pass area settings through;
+- update `InitLoggerFromCobra()` and `SetupLoggingFromValues()` to normalize `log-area` and `areas` into `logcopter.Config.Areas`;
 - update `InitEarlyLoggingFromArgs()` to parse the new flags before command discovery;
-- document the new CLI and config-file shapes in Glazed docs.
+- document the new CLI and config-file shapes in Glazed docs, including `key:value` and `key=value` examples.
 
 Test in Glazed and at least one application such as Pinocchio, because this is now an in-place change to the shared Glazed logging package rather than a separate logcopter adapter.
 
@@ -1066,7 +1113,7 @@ Mitigation:
 
 ### Glazed config map shape
 
-The native source proposal wants `logging.areas` as a map. Glazed's existing logging section is flag-oriented and currently has only scalar/string-list-style fields. Updating Glazed should support both a CLI-friendly repeatable `--log-area area=level` flag and a config-file-friendly `logging.areas` map, using a logging-specific normalizer if the generic field system cannot decode maps directly.
+The native source proposal wants `logging.areas` as a map. Glazed already has `fields.TypeKeyValue`, which is a better fit than a raw string-list field for CLI overrides. Updating Glazed should support both a CLI-friendly repeatable `--log-area area:level` / `--log-area area=level` key-value flag and a config-file-friendly `logging.areas` map, using a logging-specific normalizer if the generic field system cannot decode maps directly.
 
 Mitigation:
 

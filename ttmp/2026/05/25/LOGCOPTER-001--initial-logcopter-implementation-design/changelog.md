@@ -43,3 +43,14 @@ Updated design: logcopter remains a utility package while Glazed's existing logg
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 6 design redirection
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Updated implementation tasks for Glazed logging package changes
 
+
+## 2026-05-25
+
+Specified Glazed TypeKeyValue area overrides and expanded tasks into granular implementation phases
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/design-doc/01-initial-logcopter-implementation-guide.md — Documents TypeKeyValue log-area syntax and parser expectations
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md — Recorded Step 7 documentation update
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md — Granular phase-by-phase implementation checklist
+

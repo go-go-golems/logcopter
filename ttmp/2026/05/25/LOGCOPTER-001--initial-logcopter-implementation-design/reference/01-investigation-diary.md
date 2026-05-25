@@ -622,3 +622,95 @@ Ticket files changed in this step:
 /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
 /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
 ```
+
+## Step 7: Specify Glazed TypeKeyValue area overrides and granular execution phases
+
+I updated the design to use Glazed's existing `fields.TypeKeyValue` for command-line area overrides. This keeps area override parsing inside the Glazed field system instead of treating area levels as an untyped string-list convention. I also expanded `tasks.md` into a granular phase-by-phase execution checklist so the implementation can proceed in small reviewable steps.
+
+This step also changed the reMarkable bundle shape: `tasks.md` is now a first-class deliverable and should be uploaded with the design guide, diary, and source proposal.
+
+### Prompt Context
+
+**User prompt (verbatim):** "go ahead, and then upload to remarkable. Also add detailed granular phases with tasks, and upload as well as part of the bundle"
+
+**Assistant interpretation:** Update the LOGCOPTER-001 docs to specify key-value Glazed fields for area overrides, expand the implementation plan into detailed granular tasks, then upload the updated bundle to reMarkable including the task checklist.
+
+**Inferred user intent:** The user wants the design to become directly executable: clear field-type choice, concrete syntax examples, and a task breakdown that can guide implementation and review.
+
+**Commit (code):** N/A — documentation-only update.
+
+### What I did
+
+- Updated the design guide's Glazed logging section to specify `fields.TypeKeyValue` for `log-area`.
+- Added examples for CLI override syntax:
+  - `--log-area app.view:debug`
+  - `--log-area app.view=debug`
+  - comma-separated `StringSlice` style: `--log-area app.view=debug,app.db=warn`
+- Documented that current Glazed `TypeKeyValue` is colon-based and should be improved to accept both `key:value` and `key=value`.
+- Updated the recommended `LoggingSettings` shape so `LogAreas` is a `map[string]string` rather than a raw `[]string`.
+- Updated the root helper guidance to use a manually registered `StringSlice("log-area", ...)` flag that is parsed through the same key-value helper as the section path.
+- Rewrote `tasks.md` into ten granular phases with implementation tasks.
+- Updated the design guide to point readers at `tasks.md` as the execution checklist.
+- Updated the index with the `TypeKeyValue` conclusion.
+
+### Why
+
+`fields.TypeKeyValue` is the closest existing Glazed type for area overrides. It represents the actual data model (`map[area]level`) and makes both CLI and config handling more explicit than a free-form string list.
+
+### What worked
+
+The design now has a concrete Glazed field contract:
+
+```go
+fields.New(
+    "log-area",
+    fields.TypeKeyValue,
+    fields.WithHelp("Per-area log level override, for example app.view:debug or app.view=debug; repeatable"),
+    fields.WithDefault(map[string]string{}),
+)
+```
+
+The task list now breaks the implementation into small phases covering scaffold, runtime primitives, manager, wrapper API, output helpers, generator, Glazed key-value support, Glazed logging integration, validation, docs/examples, and release readiness.
+
+### What didn't work
+
+N/A. This was a documentation update.
+
+### What I learned
+
+The existing Glazed field system already has most of the right abstraction for area overrides. The main improvement needed is accepting `key=value` in addition to the historical `key:value` syntax, because `key=value` is more common for CLI map flags.
+
+### What was tricky to build
+
+The tricky wording is that `logging.areas` should remain the canonical YAML shape, while `log-area` is the CLI-friendly key-value field. The document now recommends accepting both and normalizing them before calling logcopter.
+
+### What warrants a second pair of eyes
+
+- Confirm whether Glazed should expose only `log-area` as a field or also a first-class `areas` field in the section schema.
+- Confirm whether the `TypeKeyValue` parser change should accept both separators globally or only for this logging field.
+
+### What should be done in the future
+
+- Implement `TypeKeyValue` parser tests before changing Glazed logging initialization.
+- Include `tasks.md` in every reMarkable bundle for this ticket, because it is now the granular implementation checklist.
+
+### Code review instructions
+
+- Review `design-doc/01-initial-logcopter-implementation-guide.md` around `LoggingSettings changes` and `Root command flags`.
+- Review `tasks.md` as the authoritative execution checklist.
+- Validate the ticket with:
+
+```bash
+docmgr doctor --ticket LOGCOPTER-001 --stale-after 30
+```
+
+### Technical details
+
+Ticket files changed in this step:
+
+```text
+/home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/design-doc/01-initial-logcopter-implementation-guide.md
+/home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/index.md
+/home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/tasks.md
+/home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-001--initial-logcopter-implementation-design/reference/01-investigation-diary.md
+```

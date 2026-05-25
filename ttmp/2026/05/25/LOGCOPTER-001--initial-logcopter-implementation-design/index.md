@@ -62,6 +62,7 @@ The design/research deliverable is complete. Implementation has not started. The
 - Generated package loggers must be reload-aware wrappers, not raw `zerolog.Logger` values.
 - Normal filtering should use per-area child logger levels, not `zerolog.SetGlobalLevel`.
 - Logcopter should not ship a Glazed adapter package; Glazed's existing `pkg/cmds/logging` section and initialization should be updated in-place to configure logcopter.
+- Glazed area overrides should use `fields.TypeKeyValue`, accepting `--log-area app.view:debug` and preferably `--log-area app.view=debug` after a small parser improvement.
 - Pinocchio demonstrates why an early logging initializer is useful before dynamic command discovery.
 
 ## Topics
