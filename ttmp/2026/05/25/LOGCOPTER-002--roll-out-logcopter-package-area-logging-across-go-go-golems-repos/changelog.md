@@ -73,3 +73,12 @@ Added Glazed logcopter rollout playbook and ported Geppetto/Pinocchio with confi
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/tasks.md — Marked playbook
 - /home/manuel/workspaces/2026-05-25/logcopter/pinocchio/logcopter_generate.go — Pinocchio go generate entry point for package and command subpackage loggers
 
+
+## 2026-05-25
+
+Uploaded updated LOGCOPTER-002 bundle after Geppetto and Pinocchio rollout
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Step 10 reMarkable upload
+

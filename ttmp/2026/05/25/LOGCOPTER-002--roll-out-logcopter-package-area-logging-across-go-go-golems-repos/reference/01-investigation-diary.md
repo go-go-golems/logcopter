@@ -1103,3 +1103,69 @@ Smoke output files used during this step:
 /tmp/pinocchio-strict-help-smoke.txt
 /tmp/geppetto-strict-help-smoke.txt
 ```
+
+## Step 10: Upload updated LOGCOPTER-002 bundle after Geppetto and Pinocchio rollout
+
+After committing the playbook, Geppetto rollout, Pinocchio rollout, smoke tests, and diary updates, I uploaded the refreshed LOGCOPTER-002 bundle to reMarkable.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 6)
+
+**Assistant interpretation:** Keep the external ticket bundle synchronized with the latest implementation and diary work.
+
+**Inferred user intent:** The user wants the reading/review artifact to reflect the completed rollout phases, not just the initial design.
+
+**Commit (code):** N/A — documentation delivery step.
+
+### What I did
+
+- Uploaded the updated LOGCOPTER-002 bundle to `/ai/2026/05/25/LOGCOPTER-002` with `--force`.
+
+### Why
+
+The previous bundle did not include the new playbook, Geppetto and Pinocchio rollout diary, or smoke-test notes.
+
+### What worked
+
+The upload succeeded:
+
+```text
+OK: uploaded LOGCOPTER-002 Cross Repository Logcopter Rollout Guide.pdf -> /ai/2026/05/25/LOGCOPTER-002
+```
+
+### What didn't work
+
+N/A.
+
+### What I learned
+
+N/A.
+
+### What was tricky to build
+
+N/A.
+
+### What warrants a second pair of eyes
+
+N/A.
+
+### What should be done in the future
+
+Continue with Clay rollout or publish/release dependency versions needed by downstream repositories.
+
+### Code review instructions
+
+Open the refreshed reMarkable bundle or inspect the local ticket docs.
+
+### Technical details
+
+Uploaded bundle inputs:
+
+```text
+index.md
+tasks.md
+changelog.md
+design-doc/01-cross-repository-logcopter-rollout-analysis-and-implementation-guide.md
+reference/01-investigation-diary.md
+```
