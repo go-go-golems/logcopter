@@ -1169,3 +1169,339 @@ changelog.md
 design-doc/01-cross-repository-logcopter-rollout-analysis-and-implementation-guide.md
 reference/01-investigation-diary.md
 ```
+
+## Step 11: Replace Glazed checkout probing with imported embedded logcopter docs
+
+I addressed the Glazed code review comment about `addLogcopterDocs`. Instead of probing nearby checkout paths such as `../logcopter/pkg/doc`, logcopter now exports an embedded `embed.FS`, and Glazed imports `github.com/go-go-golems/logcopter/pkg/doc` directly and mounts that filesystem into its help system.
+
+This makes the intended ownership clear: logcopter owns its own help entries, and Glazed consumes them as an imported dependency rather than relying on local filesystem layout.
+
+### Prompt Context
+
+**User prompt (verbatim):** "continue"
+
+**Assistant interpretation:** Continue the LOGCOPTER-002 rollout and address the supplied Glazed review comment about loading logcopter docs by import rather than local path probing.
+
+**Inferred user intent:** The user wants the review feedback applied cleanly while the broader rollout continues.
+
+**Commit (code):** `0e223b4` — "Embed logcopter help documents"; `e720f81` — "Load embedded logcopter help docs"
+
+### What I did
+
+- Updated `logcopter/pkg/doc/doc.go` to export:
+
+```go
+//go:embed topics/*.md tutorials/*.md
+var FS embed.FS
+```
+
+- Updated `glazed/cmd/glaze/main.go` to import:
+
+```go
+logcopterdoc "github.com/go-go-golems/logcopter/pkg/doc"
+```
+
+- Replaced checkout probing with:
+
+```go
+func addLogcopterDocs(helpSystem *help.HelpSystem) error {
+    return helpSystem.LoadSectionsFromFS(logcopterdoc.FS, ".")
+}
+```
+
+### Why
+
+The path probing only worked in a specific workspace layout and would not work in installed binaries. Embedding the docs in logcopter makes the docs available wherever the module is linked.
+
+### What worked
+
+- Logcopter tests passed, including the pre-commit lint/test hook.
+- Glazed workspace tests passed.
+- `go run ./cmd/glaze help logcopter-logging-architecture` rendered the imported logcopter help topic.
+- Glazed pre-commit validation passed.
+
+### What didn't work
+
+Before using the correct slug I tried:
+
+```bash
+go run ./cmd/glaze help logcopter-package-logging
+```
+
+That returned:
+
+```text
+Unknown help topic [`logcopter-package-logging`]
+```
+
+The actual tutorial slug is `logcopter-package-logging-tutorial`; the architecture topic slug is `logcopter-logging-architecture`, which rendered successfully.
+
+There is also an important release-order caveat: Glazed now imports `logcopterdoc.FS`, which exists in local logcopter commit `0e223b4` but is not part of the already-published `logcopter v0.0.1`. In the workspace this compiles through `go.work`; standalone Glazed builds with `GOWORK=off` will need a new published logcopter version before this Glazed commit can be released.
+
+### What I learned
+
+Exporting a plain `embed.FS` keeps logcopter independent from Glazed while still letting Glazed mount the docs through its help system. This is the right dependency direction: Glazed can import logcopter docs, but logcopter still does not import Glazed.
+
+### What was tricky to build
+
+The subtle point is versioning. The code shape is correct, but because the exported `FS` symbol is new, the Glazed commit and logcopter commit must be released in the right order. A Glazed module build that only sees `logcopter v0.0.1` cannot compile this change.
+
+### What warrants a second pair of eyes
+
+- Confirm the exported symbol name `FS` is acceptable, or whether it should be `DocFS` for clarity.
+- Confirm release sequencing: publish a new logcopter version containing `pkg/doc.FS`, then update Glazed to require that version before merging/releasing Glazed.
+
+### What should be done in the future
+
+- Publish a new logcopter tag for the embedded docs API.
+- Update Glazed's `go.mod` to require that new version before any standalone Glazed CI/release.
+
+### Code review instructions
+
+Review:
+
+```text
+logcopter/pkg/doc/doc.go
+glazed/cmd/glaze/main.go
+```
+
+Validate in the workspace with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/logcopter
+go test ./...
+
+cd /home/manuel/workspaces/2026-05-25/logcopter/glazed
+go test ./cmd/glaze
+go run ./cmd/glaze help logcopter-logging-architecture
+```
+
+### Technical details
+
+Commits:
+
+```text
+0e223b4 Embed logcopter help documents
+e720f81 Load embedded logcopter help docs
+```
+
+## Step 12: Port Clay package diagnostics to logcopter
+
+I completed the Clay phase of the rollout. Clay now directly depends on logcopter v0.0.1, registers `logcopter-gen` as a Go tool, has a root `go:generate` entry point, and contains generated package loggers for `./pkg/...` under prefix `go-go-golems.clay`.
+
+The conversion kept Clay's logging initialization helpers deprecated. Package diagnostics moved to generated logcopter loggers, while the example application was updated to use Glazed logging setup directly so lint no longer reports the deprecated Clay helper in example code.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 11)
+
+**Assistant interpretation:** Continue the cross-repository rollout by applying the established playbook to Clay.
+
+**Inferred user intent:** Finish the planned LOGCOPTER-002 repository set and keep Clay as utility/config plumbing rather than a logging initialization owner.
+
+**Commit (code):** `440a77d` — "Adopt logcopter package loggers"
+
+### What I did
+
+- Ran:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/clay
+go get github.com/go-go-golems/logcopter@v0.0.1
+go get -tool github.com/go-go-golems/logcopter/cmd/logcopter-gen@v0.0.1
+go mod tidy
+```
+
+- Added `clay/logcopter_generate.go`:
+
+```go
+package clay
+
+//go:generate go tool logcopter-gen -area-prefix go-go-golems.clay -strip-prefix github.com/go-go-golems/clay ./pkg/...
+```
+
+- Ran `go generate ./...`.
+- Added Makefile targets:
+  - `logcopter-generate`,
+  - `logcopter-check`.
+- Added a GitHub Actions generated-file freshness check.
+- Converted diagnostics in watcher, repositories, filters, SQL, workerpool, and related Clay packages.
+- Kept global zerolog as `zlog` in `pkg/watcher/watcher_test.go` where the test intentionally configures `zlog.Logger`.
+- Replaced the example's deprecated `pkg.InitGlazed("logging-example", rootCmd)` call with `logging.AddLoggingSectionToRootCommand(rootCmd, "logging-example")`.
+
+### Why
+
+Clay is the final repository in the LOGCOPTER-002 rollout set. It should use logcopter for package diagnostics, but should not regain ownership of logging initialization. The existing deprecation comments in `pkg/init.go` remain the source of truth.
+
+### What worked
+
+- `make logcopter-check` passed.
+- `go test ./pkg/...` passed.
+- `go test ./...` passed.
+- `make lint` passed.
+- Commit succeeded.
+
+### What didn't work
+
+The first package test run failed because `pkg/watcher/watcher_test.go` configured the global zerolog logger through `log.Output(...)` after the generated package variable named `log` was introduced:
+
+```text
+pkg/watcher/watcher_test.go:19:20: log.Output undefined (type logcopter.Logger has no field or method Output)
+```
+
+I fixed this by using the already-aliased global zerolog package:
+
+```go
+zlog.Logger = zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(zerolog.DebugLevel)
+```
+
+The first lint run failed because `examples/simple/logging_layer_example.go` still called the deprecated Clay initialization helper:
+
+```text
+examples/simple/logging_layer_example.go:92:9: SA1019: pkg.InitGlazed is deprecated: logging and command config setup are Glazed territory. Replace (staticcheck)
+```
+
+I fixed the example to call Glazed logging setup directly.
+
+### What I learned
+
+Clay's package conversion was mechanically simpler than Geppetto and Pinocchio, but tests again confirmed the same collision rule: any package-level import named `log` must be removed or aliased when a generated `log` variable exists.
+
+Strict area smoke tests are only useful for areas that are registered in the running binary. The Clay example does not import most Clay library packages after the example cleanup, so a strict config with `go-go-golems.clay.pkg.repositories` correctly failed as an unknown area.
+
+### What was tricky to build
+
+The tricky bit was keeping Clay's helper deprecation intact while still making Clay's examples lint-clean. The library still exposes the deprecated functions for compatibility, but examples should demonstrate the replacement Glazed API.
+
+### What warrants a second pair of eyes
+
+- Review whether generating loggers for all Clay `pkg/...` directories, including small command metadata packages, is desirable.
+- Review `pkg/init.go`: it now has generated package diagnostics while still importing Glazed logging for the deprecated compatibility helper.
+
+### What should be done in the future
+
+- Decide whether to remove the deprecated Clay logging helpers in a future major release.
+- Add a small deterministic Clay package smoke command if strict area validation should assert an actual Clay library area in a CLI.
+
+### Code review instructions
+
+Start with:
+
+```text
+clay/go.mod
+clay/logcopter_generate.go
+clay/Makefile
+clay/.github/workflows/push.yml
+```
+
+Then review representative converted packages:
+
+```text
+clay/pkg/init.go
+clay/pkg/watcher/watcher.go
+clay/pkg/watcher/watcher_test.go
+clay/pkg/repositories/watcher.go
+clay/pkg/sql/config.go
+clay/pkg/workerpool/workerpool.go
+clay/examples/simple/logging_layer_example.go
+```
+
+Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/clay
+make logcopter-check
+go test ./pkg/...
+go test ./...
+make lint
+```
+
+### Technical details
+
+Final commit:
+
+```text
+440a77d Adopt logcopter package loggers
+```
+
+Clay config smoke:
+
+```bash
+cat >/tmp/logcopter-clay.yaml <<'YAML'
+logging:
+  level: warn
+  format: text
+  areas:
+    go-go-golems.clay.pkg.repositories: debug
+    go-go-golems.clay.pkg.watcher: debug
+YAML
+
+cd /home/manuel/workspaces/2026-05-25/logcopter/clay
+go run ./examples/simple --log-config /tmp/logcopter-clay.yaml help
+```
+
+## Step 13: Upload updated LOGCOPTER-002 bundle after Clay rollout
+
+After completing Clay and recording the embedded-docs change, I uploaded the refreshed LOGCOPTER-002 bundle to reMarkable.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 11)
+
+**Assistant interpretation:** Keep the reMarkable review artifact current after the latest rollout work.
+
+**Inferred user intent:** The user wants the external bundle to reflect the current implementation state and diary.
+
+**Commit (code):** N/A — documentation delivery step.
+
+### What I did
+
+- Uploaded the updated bundle to `/ai/2026/05/25/LOGCOPTER-002` with `--force`.
+
+### Why
+
+The previous bundle did not include the Glazed embedded-docs review fix or Clay rollout diary.
+
+### What worked
+
+Upload succeeded:
+
+```text
+OK: uploaded LOGCOPTER-002 Cross Repository Logcopter Rollout Guide.pdf -> /ai/2026/05/25/LOGCOPTER-002
+```
+
+### What didn't work
+
+N/A.
+
+### What I learned
+
+N/A.
+
+### What was tricky to build
+
+N/A.
+
+### What warrants a second pair of eyes
+
+N/A.
+
+### What should be done in the future
+
+Publish a new logcopter version for the embedded docs API, then update Glazed's module requirement before standalone Glazed release/CI.
+
+### Code review instructions
+
+Review the local ticket docs or the refreshed reMarkable bundle.
+
+### Technical details
+
+Uploaded bundle inputs:
+
+```text
+index.md
+tasks.md
+changelog.md
+design-doc/01-cross-repository-logcopter-rollout-analysis-and-implementation-guide.md
+reference/01-investigation-diary.md
+```
