@@ -75,9 +75,9 @@ A PR is ready when all of the following are true:
 - A Codex signal exists. A signal is either:
   - a Codex-authored review/comment, matched by configurable author regex; or
   - a human comment whose body is exactly `@codex review`, because Codex reacts to that trigger comment.
-- The latest Codex signal has at least one `THUMBS_UP` reaction.
+- The latest Codex signal has at least one `THUMBS_UP` reaction, or a Codex-authored body explicitly says no major issues and includes a thumbs-up token such as `:+1:`.
 - The latest Codex signal has no `EYES` reaction.
-- If the latest signal is Codex-authored, its body is empty/benign; substantive body text means the review likely requested changes or left comments.
+- If the latest signal is Codex-authored, its body is empty/benign/satisfied; substantive body text with suggestions means the review likely requested changes or left comments.
 
 ### Why trigger comments are signals
 
@@ -143,7 +143,7 @@ FAIL: latest Codex signal has 1 eyes reaction(s), review may still be running
 OK: latest signal is a human @codex review trigger; body comments are not treated as review findings
 ```
 
-That verifies the script can detect the eyes/in-progress state. A subsequent Codex review on the intentionally bad commit produced a substantive Codex-authored body, which the checker also treated as not ready. After reverting the bad commit, a second `@codex review` trigger again produced an eyes reaction while Codex reviewed the restored PR.
+That verifies the script can detect the eyes/in-progress state. A subsequent Codex review on the intentionally bad commit produced a substantive Codex-authored body, which the checker also treated as not ready. After reverting the bad commit, a later Codex comment said it did not find major issues and included `:+1:`; the checker now treats that body form as a satisfied thumbs-up signal even when GitHub reaction counts do not include `THUMBS_UP`.
 
 ## Risks and open questions
 

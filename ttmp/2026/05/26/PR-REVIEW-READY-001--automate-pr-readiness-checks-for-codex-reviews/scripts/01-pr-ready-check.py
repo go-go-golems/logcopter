@@ -26,8 +26,11 @@ from typing import Any
 ACCEPTABLE_CHECK_CONCLUSIONS = {"SUCCESS", "SKIPPED", "NEUTRAL"}
 DEFAULT_CODEX_RE = r"(?i)(^|[-_])(codex|openai-codex|chatgpt)([-_]|$)|codex|openai"
 BENIGN_CODEX_BODY_RE = re.compile(
-    r"^\s*(?:approved|looks good|lgtm|no issues found|✅|👍|:thumbsup:|thumbs up|nit:)?\s*$",
+    r"^\s*(?:approved|looks good|lgtm|no issues found|✅|👍|:\+1:|:thumbsup:|thumbs up|nit:)?\s*$",
     re.IGNORECASE,
+)
+SATISFIED_CODEX_BODY_RE = re.compile(
+    r"(?is)(didn'?t find (?:any )?major issues|no major issues|looks good|lgtm).*(?:👍|:\+1:|:thumbsup:|thumbs up)",
 )
 
 QUERY = r"""
@@ -124,6 +127,15 @@ def reaction_count(node: dict[str, Any], content: str) -> int:
     return 0
 
 
+def codex_body_is_satisfied(body: str) -> bool:
+    return bool(SATISFIED_CODEX_BODY_RE.search(body or ""))
+
+
+def codex_body_is_benign(body: str) -> bool:
+    stripped = (body or "").strip()
+    return not stripped or bool(BENIGN_CODEX_BODY_RE.match(stripped)) or codex_body_is_satisfied(stripped)
+
+
 def checks_findings(pr: dict[str, Any]) -> list[Finding]:
     nodes = (((pr.get("statusCheckRollup") or {}).get("contexts") or {}).get("nodes")) or []
     findings: list[Finding] = []
@@ -187,19 +199,22 @@ def codex_findings(pr: dict[str, Any], codex_re: re.Pattern[str]) -> list[Findin
     body = latest.get("body") or ""
     where = f"latest Codex signal ({latest['kind']}) by {latest.get('login') or '<unknown>'}: {latest.get('url')}"
     findings: list[Finding] = [Finding(True, where)]
-    if thumbs <= 0:
-        findings.append(Finding(False, "latest Codex signal has no thumbs-up reaction"))
-    else:
+    body_satisfied = latest.get("codexAuthored") and codex_body_is_satisfied(body)
+    if thumbs <= 0 and not body_satisfied:
+        findings.append(Finding(False, "latest Codex signal has no thumbs-up reaction or satisfied thumbs-up body"))
+    elif thumbs > 0:
         findings.append(Finding(True, f"latest Codex signal has {thumbs} thumbs-up reaction(s)"))
+    else:
+        findings.append(Finding(True, "latest Codex-authored body contains a satisfied thumbs-up signal"))
     if eyes > 0:
         findings.append(Finding(False, f"latest Codex signal has {eyes} eyes reaction(s), review may still be running"))
     else:
         findings.append(Finding(True, "latest Codex signal has no eyes reaction"))
-    if latest.get("codexAuthored") and body.strip() and not BENIGN_CODEX_BODY_RE.match(body):
+    if latest.get("codexAuthored") and not codex_body_is_benign(body):
         preview = re.sub(r"\s+", " ", body.strip())[:240]
         findings.append(Finding(False, f"latest Codex-authored body contains substantive comments: {preview!r}"))
     elif latest.get("codexAuthored"):
-        findings.append(Finding(True, "latest Codex-authored body is empty/benign"))
+        findings.append(Finding(True, "latest Codex-authored body is empty/benign/satisfied"))
     else:
         findings.append(Finding(True, "latest signal is a human @codex review trigger; body comments are not treated as review findings"))
     return findings

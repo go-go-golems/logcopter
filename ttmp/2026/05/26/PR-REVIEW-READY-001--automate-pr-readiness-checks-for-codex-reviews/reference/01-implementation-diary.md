@@ -261,7 +261,6 @@ The main subtlety was separating "a comment that asks Codex to review" from "a c
 
 ### What should be done in the future
 
-- Wait for the triggered Codex review to finish and capture the completed thumbs-up state.
 - If Codex leaves inline review comments instead of a body, extend the GraphQL query to include review threads/comments.
 
 ### Code review instructions
@@ -279,3 +278,94 @@ Final observed not-ready command:
 cd logcopter/ttmp/2026/05/26/PR-REVIEW-READY-001--automate-pr-readiness-checks-for-codex-reviews/scripts
 ./01-pr-ready-check.py https://github.com/go-go-golems/pinocchio/pull/158 || true
 ```
+
+## Step 3: Accept Codex's satisfied body form and reuse the checker for rollout PRs
+
+After using the checker on the active rollout PRs, I found that Codex does not always express approval as a GitHub `THUMBS_UP` reaction. On Pinocchio PR 158, the latest Codex-authored comment said it did not find major issues and included `:+1:` in the body. That is semantically the satisfied state the user described, even though the reaction count was zero.
+
+I updated the checker to accept that body form as a thumbs-up signal while still rejecting substantive suggestion bodies. Then I triggered fresh `@codex review` comments on the Geppetto and Glazed PRs after pushing the playbook/dependency-bump updates.
+
+### Prompt Context
+
+**User prompt (verbatim):** "We also want to replace the bump-glazed rules in the makefiles to scan go.mod for any go-go-golems dependencies, and bump those. We have to make our way through all the go-go-golems repos in dependency order as we add logcopter support to all of them. 
+
+Then update the playbook on how to not only add logcopter, but bump dependencies, and submit PRs and wait for their reviews, using the scripts for easy of use."
+
+**Assistant interpretation:** Generalize the dependency bump workflow in current Makefiles, update the rollout playbook with dependency-order and PR-review automation guidance, and make sure the PR readiness scripts match observed Codex behavior.
+
+**Inferred user intent:** The user wants a scalable multi-repository rollout process, not just one-off logcopter edits.
+
+**Commit (code):** N/A in this ticket; Makefile/playbook commits were made in their respective repositories.
+
+### What I did
+
+- Updated `scripts/01-pr-ready-check.py` so a Codex-authored body that says no major issues and includes `:+1:`, `👍`, `:thumbsup:`, or `thumbs up` counts as a satisfied thumbs-up signal.
+- Re-ran the readiness checker on:
+  - Pinocchio PR 158
+  - Geppetto PR 359
+  - Glazed PR 581
+- Triggered fresh Codex reviews for Geppetto and Glazed after new commits:
+  - `https://github.com/go-go-golems/geppetto/pull/359#issuecomment-4546989836`
+  - `https://github.com/go-go-golems/glazed/pull/581#issuecomment-4546990025`
+
+### Why
+
+- The script should encode the actual Codex protocol observed in GitHub, not an overly narrow assumption that approval only appears as a reaction count.
+- The playbook now tells future operators to use the readiness script, so the script needs to be robust enough for the PR states we are seeing.
+
+### What worked
+
+Pinocchio PR 158 now reports Codex satisfied but CI still pending, which is the correct state split:
+
+```text
+READY: no
+FAIL: pending checks: Analyze: status=IN_PROGRESS; test: status=IN_PROGRESS; lint: status=IN_PROGRESS; GoSec Security Scan: status=IN_PROGRESS
+OK: latest Codex signal (comment) by chatgpt-codex-connector: https://github.com/go-go-golems/pinocchio/pull/158#issuecomment-4546761956
+OK: latest Codex-authored body contains a satisfied thumbs-up signal
+OK: latest Codex signal has no eyes reaction
+OK: latest Codex-authored body is empty/benign/satisfied
+```
+
+Glazed still correctly reports not ready because the latest Codex-authored body contains substantive suggestions:
+
+```text
+FAIL: latest Codex signal has no thumbs-up reaction or satisfied thumbs-up body
+FAIL: latest Codex-authored body contains substantive comments: '### 💡 Codex Review Here are some automated review suggestions...'
+```
+
+### What didn't work
+
+The prior checker version treated the Pinocchio satisfied comment as not ready because it only accepted reaction counts as thumbs-up. That was too narrow for the real Codex output.
+
+### What I learned
+
+Codex can express approval as text in a bot-authored body rather than as a GitHub reaction. The readiness checker must handle both forms while still failing when the body contains actual suggestions.
+
+### What was tricky to build
+
+The tricky line is distinguishing a satisfied, explanatory Codex body from a comment body that contains review suggestions. I used a narrow satisfied-body regex that requires both a no-major-issues/looks-good phrase and a thumbs-up token. This avoids treating any arbitrary Codex body as approval.
+
+### What warrants a second pair of eyes
+
+- Confirm the satisfied-body regex is neither too broad nor too narrow for future Codex phrasing.
+- Consider querying inline review comments if Codex starts putting findings outside the top-level body.
+
+### What should be done in the future
+
+- Add captured fixtures for Codex states: running eyes, satisfied body, satisfied reaction, and suggestions body.
+- Add a batch wrapper over multiple PR URLs.
+
+### Code review instructions
+
+- Review `scripts/01-pr-ready-check.py`, especially `SATISFIED_CODEX_BODY_RE`, `codex_body_is_satisfied`, and `codex_findings`.
+- Validate against current PRs with:
+
+```bash
+scripts/00-pr-ready-check.sh https://github.com/go-go-golems/pinocchio/pull/158 || true
+scripts/00-pr-ready-check.sh https://github.com/go-go-golems/geppetto/pull/359 || true
+scripts/00-pr-ready-check.sh https://github.com/go-go-golems/glazed/pull/581 || true
+```
+
+### Technical details
+
+The satisfied-body regex is intentionally conjunctive: it requires both a positive no-major-issues phrase and a thumbs-up token.

@@ -144,3 +144,17 @@ Aligned logcopter generated-file CI checks across Geppetto, Pinocchio, Clay, and
 - /home/manuel/code/wesen/go-go-golems/go-template/logcopter_generate.go — Template go:generate entry point uses go tool logcopter-gen
 - /home/manuel/code/wesen/go-go-golems/go-template/pkg/logcopter.go — Template commits its baseline generated package logger
 - /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/doc/tutorials/logcopter-package-rollout-playbook.md — Playbook documents why checks must run before go generate
+
+## 2026-05-26
+
+Generalized go-go-golems dependency bump targets and expanded the rollout playbook
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/Makefile — Replaced hand-maintained bump-glazed with generic bump-go-go-golems
+- /home/manuel/workspaces/2026-05-25/logcopter/geppetto/Makefile — Replaced hand-maintained bump-glazed with generic bump-go-go-golems
+- /home/manuel/workspaces/2026-05-25/logcopter/pinocchio/Makefile — Replaced hand-maintained bump-glazed with generic bump-go-go-golems
+- /home/manuel/workspaces/2026-05-25/logcopter/clay/Makefile — Replaced hand-maintained bump-glazed with generic bump-go-go-golems
+- /home/manuel/code/wesen/go-go-golems/go-template/Makefile — Template now includes the generic bump-go-go-golems target
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/doc/tutorials/logcopter-package-rollout-playbook.md — Playbook now covers dependency-order rollout, dependency bumps, PR submission, and Codex readiness scripts
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/26/PR-REVIEW-READY-001--automate-pr-readiness-checks-for-codex-reviews/scripts/00-pr-ready-check.sh — Referenced by the playbook for PR readiness checks

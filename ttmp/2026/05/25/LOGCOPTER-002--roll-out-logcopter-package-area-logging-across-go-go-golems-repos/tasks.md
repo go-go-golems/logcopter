@@ -63,6 +63,8 @@
 
 - [x] Write a Glazed help tutorial playbook for converting go-go-golems packages to logcopter.
 - [x] Update rollout playbook with correct non-mutating CI drift-check ordering.
+- [x] Replace hand-maintained `bump-glazed` targets with generic `bump-go-go-golems` targets.
+- [x] Update rollout playbook with dependency-order, dependency-bump, PR submission, and Codex readiness guidance.
 - [x] Align Geppetto, Pinocchio, Clay, and go-template CI with the playbook ordering.
 - [x] Validate the playbook is discoverable through `glaze help`.
 - [x] Use the playbook to guide the Geppetto rollout.
