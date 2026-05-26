@@ -1439,3 +1439,69 @@ YAML
 cd /home/manuel/workspaces/2026-05-25/logcopter/clay
 go run ./examples/simple --log-config /tmp/logcopter-clay.yaml help
 ```
+
+## Step 13: Upload updated LOGCOPTER-002 bundle after Clay rollout
+
+After completing Clay and recording the embedded-docs change, I uploaded the refreshed LOGCOPTER-002 bundle to reMarkable.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 11)
+
+**Assistant interpretation:** Keep the reMarkable review artifact current after the latest rollout work.
+
+**Inferred user intent:** The user wants the external bundle to reflect the current implementation state and diary.
+
+**Commit (code):** N/A — documentation delivery step.
+
+### What I did
+
+- Uploaded the updated bundle to `/ai/2026/05/25/LOGCOPTER-002` with `--force`.
+
+### Why
+
+The previous bundle did not include the Glazed embedded-docs review fix or Clay rollout diary.
+
+### What worked
+
+Upload succeeded:
+
+```text
+OK: uploaded LOGCOPTER-002 Cross Repository Logcopter Rollout Guide.pdf -> /ai/2026/05/25/LOGCOPTER-002
+```
+
+### What didn't work
+
+N/A.
+
+### What I learned
+
+N/A.
+
+### What was tricky to build
+
+N/A.
+
+### What warrants a second pair of eyes
+
+N/A.
+
+### What should be done in the future
+
+Publish a new logcopter version for the embedded docs API, then update Glazed's module requirement before standalone Glazed release/CI.
+
+### Code review instructions
+
+Review the local ticket docs or the refreshed reMarkable bundle.
+
+### Technical details
+
+Uploaded bundle inputs:
+
+```text
+index.md
+tasks.md
+changelog.md
+design-doc/01-cross-repository-logcopter-rollout-analysis-and-implementation-guide.md
+reference/01-investigation-diary.md
+```
