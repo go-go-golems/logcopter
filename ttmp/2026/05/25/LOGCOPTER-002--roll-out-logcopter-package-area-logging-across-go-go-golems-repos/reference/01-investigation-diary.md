@@ -20,7 +20,7 @@ RelatedFiles:
       Note: Phased rollout checklist
 ExternalSources: []
 Summary: Chronological investigation diary for rolling published logcopter v0.0.1 across go-go-golems repositories.
-LastUpdated: 2026-05-25T19:45:00-04:00
+LastUpdated: 2026-05-26T08:55:00-04:00
 WhatFor: Use this to understand what was inspected and why before implementation begins.
 WhenToUse: Before continuing LOGCOPTER-002 implementation or reviewing its design.
 ---
@@ -1703,4 +1703,133 @@ tasks.md
 changelog.md
 design-doc/01-cross-repository-logcopter-rollout-analysis-and-implementation-guide.md
 reference/01-investigation-diary.md
+```
+
+## Step 16: Align generated-file CI ordering across rollout repos and template
+
+A review on the Clay PR pointed out that a workflow which runs `go generate ./...` immediately before `logcopter-gen -check` does not actually verify the checked-in generated files. The generate step rewrites stale `pkg/**/logcopter.go` files first, so the later check validates the regenerated workspace rather than the PR contents.
+
+I fixed the ordering across the remaining rollout repositories and updated the reusable template so future go-go-golems repositories inherit the same pattern. The intended split is now explicit: `go generate ./...` is the mutating refresh command, while `make logcopter-check` is the non-mutating CI drift check and must run first.
+
+### Prompt Context
+
+**User prompt (verbatim):** "now do cicd for geppetto and pinocchio, in case we haven't either  / make them consisten tto th eplaybook"
+
+**Follow-up prompt (verbatim):** "update the template as well in ~/code/wesen/go-go-golems/go-template/"
+
+**Assistant interpretation:** Check Geppetto and Pinocchio CI for the same generated-file drift problem fixed in Clay, make their workflows match the playbook, and update the go-template repository so future projects start with the correct logcopter generation/check setup.
+
+**Inferred user intent:** Prevent CI from masking stale generated logcopter files across current rollout PRs and future go-go-golems repositories.
+
+**Commit (code):** `82b47378cc12d4ac906103399b7d3dcfba4d562f` — "Check logcopter files before generation" in Geppetto.
+
+**Commit (code):** `7f2370ff05dd3fdf82876895b94e54efd71eb171` — "Check logcopter files before generation" in Pinocchio.
+
+**Commit (code):** `5ee7734` — "Add logcopter generation checks to template" in `go-template`.
+
+### What I did
+
+- Updated `geppetto/.github/workflows/push.yml` so `make logcopter-check` runs before `go generate ./...` and before the existing `git diff --exit-code` generated-file check.
+- Ran `go generate ./...` in Geppetto after the check exposed one missing generated logger file.
+- Added the missing Geppetto generated file:
+  - `geppetto/pkg/js/modules/geppetto/provider/logcopter.go`
+- Updated `pinocchio/.github/workflows/push.yml` so `make logcopter-check` runs before `go generate ./...`.
+- Reverted unrelated Pinocchio `go.mod` / `go.sum` churn that appeared during local generation before committing.
+- Updated `/home/manuel/code/wesen/go-go-golems/go-template` with baseline logcopter support:
+  - `go.mod` now requires `github.com/go-go-golems/logcopter v0.1.0` and registers `tool github.com/go-go-golems/logcopter/cmd/logcopter-gen`.
+  - `logcopter_generate.go` runs `go tool logcopter-gen` from `go generate ./...`.
+  - `pkg/logcopter.go` is committed so the template's own check starts green.
+  - `Makefile` now has `logcopter-generate` and `logcopter-check` targets.
+  - `.github/workflows/push.yml` runs `make logcopter-check` before `go generate ./...`, then runs `git diff --exit-code` and tests.
+- Pushed the Geppetto and Pinocchio commits to their `wesen/task/logcopter` branches.
+- Pushed the template commit to `go-go-golems/go-template` `main`.
+
+### Why
+
+- Running `go generate ./...` before `logcopter-gen -check` makes stale committed logger files invisible to CI.
+- The playbook now says the check must run before any mutating generation step, so the active repositories and the template should follow that rule.
+- The template needs committed generated files and the generator tool registration; otherwise its own CI drift check would fail immediately or new repositories would start without a known-good baseline.
+
+### What worked
+
+- `make logcopter-check` passed in Pinocchio after the workflow ordering change.
+- `make logcopter-check` passed in Geppetto after adding the missing provider package logger.
+- Template validation passed with:
+  - `make logcopter-check`
+  - `go test ./...`
+- Pinocchio pre-push validation completed successfully, including lint, release snapshot, tests, and web checks.
+
+### What didn't work
+
+- The first Geppetto check failed, which confirmed the reviewer concern was real:
+
+```text
+go tool logcopter-gen -area-prefix go-go-golems.geppetto -strip-prefix github.com/go-go-golems/geppetto -check ./pkg/...
+logcopter-gen: generated file is not current: /home/manuel/workspaces/2026-05-25/logcopter/geppetto/pkg/js/modules/geppetto/provider/logcopter.go
+make: *** [Makefile:65: logcopter-check] Error 1
+```
+
+- Running generation in Pinocchio also touched `go.mod` / `go.sum` by bumping Clay from `v0.4.9` to `v0.4.10`; this was unrelated to the CI ordering fix and was reverted before commit.
+
+### What I learned
+
+- Geppetto had already grown at least one package path that was not represented by a committed generated logger file, so the corrected non-mutating check caught real drift.
+- The template cannot merely document logcopter; it needs a committed generated file and tool registration if its default CI is going to enforce logcopter freshness.
+
+### What was tricky to build
+
+The subtle part is that two generated-file checks answer different questions. `go tool logcopter-gen ... -check` before generation asks whether the checked-in logger files are fresh. `git diff --exit-code` after `go generate ./...` asks whether all generators, not just logcopter, left the workspace unchanged. Both are useful, but only the first one catches stale logcopter files before they are overwritten.
+
+The template was also slightly tricky because it uses the placeholder module path `github.com/go-go-golems/XXX`. I kept the placeholders in the `go:generate` directive and generated `pkg/logcopter.go` with area `go-go-golems.XXX.pkg`, so downstream template replacement remains obvious and reproducible.
+
+### What warrants a second pair of eyes
+
+- Confirm that adding logcopter as a baseline dependency in `go-template` is desired for every new go-go-golems repository, not only CLI/library repositories that opt into area logging.
+- Review whether Geppetto's newly generated `pkg/js/modules/geppetto/provider/logcopter.go` should have been part of the earlier rollout commit or whether a package was added after that rollout.
+
+### What should be done in the future
+
+- Apply the same CI ordering to any other repository that adds logcopter generation: non-mutating `make logcopter-check` first, mutating `go generate ./...` second.
+- If a repository has no other generators, keep the `go generate` step anyway if the project wants the broader `git diff --exit-code` generated-file freshness guard.
+
+### Code review instructions
+
+- Start with the workflow files:
+  - `geppetto/.github/workflows/push.yml`
+  - `pinocchio/.github/workflows/push.yml`
+  - `/home/manuel/code/wesen/go-go-golems/go-template/.github/workflows/push.yml`
+- Confirm that `make logcopter-check` appears before `go generate ./...`.
+- Review the template baseline files:
+  - `/home/manuel/code/wesen/go-go-golems/go-template/logcopter_generate.go`
+  - `/home/manuel/code/wesen/go-go-golems/go-template/pkg/logcopter.go`
+  - `/home/manuel/code/wesen/go-go-golems/go-template/Makefile`
+  - `/home/manuel/code/wesen/go-go-golems/go-template/go.mod`
+- Validate with:
+  - `cd geppetto && make logcopter-check`
+  - `cd pinocchio && make logcopter-check`
+  - `cd /home/manuel/code/wesen/go-go-golems/go-template && make logcopter-check && go test ./...`
+
+### Technical details
+
+Correct CI ordering:
+
+```yaml
+-
+  name: Verify logcopter package loggers
+  run: make logcopter-check
+-
+  name: Generate assets
+  run: go generate ./...
+-
+  name: Verify generated files are up to date
+  run: git diff --exit-code
+-
+  name: Run unit tests
+  run: go test ./...
+```
+
+Generated Geppetto logger area:
+
+```go
+var log = logcopter.Package("go-go-golems.geppetto.pkg.js.modules.geppetto.provider")
 ```

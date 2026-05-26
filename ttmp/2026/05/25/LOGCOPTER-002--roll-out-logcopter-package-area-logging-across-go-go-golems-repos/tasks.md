@@ -62,6 +62,8 @@
 ## Phase 5 — Cross-repository validation and docs
 
 - [x] Write a Glazed help tutorial playbook for converting go-go-golems packages to logcopter.
+- [x] Update rollout playbook with correct non-mutating CI drift-check ordering.
+- [x] Align Geppetto, Pinocchio, Clay, and go-template CI with the playbook ordering.
 - [x] Validate the playbook is discoverable through `glaze help`.
 - [x] Use the playbook to guide the Geppetto rollout.
 - [x] Use the playbook to guide the Pinocchio rollout.
@@ -71,6 +73,6 @@
 - [ ] Verify one `go-go-golems.geppetto...` area can be configured through a Pinocchio command path.
 - [x] Verify Clay package diagnostics/config smoke through a Glazed-configured example application.
 - [ ] Update repository READMEs or help docs with cross-repository area prefix examples.
-- [ ] Update LOGCOPTER-002 diary and changelog after each implementation phase.
+- [x] Update LOGCOPTER-002 diary and changelog after each implementation phase.
 - [ ] Run `docmgr doctor --ticket LOGCOPTER-002 --stale-after 30`.
 - [ ] Upload final bundle to reMarkable.

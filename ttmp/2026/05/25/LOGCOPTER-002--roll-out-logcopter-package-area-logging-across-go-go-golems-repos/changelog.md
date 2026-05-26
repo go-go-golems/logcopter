@@ -129,3 +129,18 @@ Uploaded updated LOGCOPTER-002 bundle after Glazed PR review remediation
 
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Step 15 reMarkable upload
 
+
+## 2026-05-26
+
+Aligned logcopter generated-file CI checks across Geppetto, Pinocchio, Clay, and go-template
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/geppetto/.github/workflows/push.yml — Runs non-mutating logcopter freshness check before mutating generation
+- /home/manuel/workspaces/2026-05-25/logcopter/geppetto/pkg/js/modules/geppetto/provider/logcopter.go — Newly committed generated logger file caught by the corrected check
+- /home/manuel/workspaces/2026-05-25/logcopter/pinocchio/.github/workflows/push.yml — Runs non-mutating logcopter freshness check before mutating generation
+- /home/manuel/code/wesen/go-go-golems/go-template/.github/workflows/push.yml — Template CI now uses the same check-before-generate ordering
+- /home/manuel/code/wesen/go-go-golems/go-template/Makefile — Template exposes logcopter-generate and logcopter-check targets
+- /home/manuel/code/wesen/go-go-golems/go-template/logcopter_generate.go — Template go:generate entry point uses go tool logcopter-gen
+- /home/manuel/code/wesen/go-go-golems/go-template/pkg/logcopter.go — Template commits its baseline generated package logger
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/doc/tutorials/logcopter-package-rollout-playbook.md — Playbook documents why checks must run before go generate
