@@ -120,3 +120,12 @@ Addressed Glazed PR 581 review comments and added standalone logcopter smoke cov
 - /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/logging/logcopter_test.go — Regression test verifies profile-selected warn/json/file settings survive unchanged CLI defaults
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Step 14 PR review remediation diary
 
+
+## 2026-05-25
+
+Uploaded updated LOGCOPTER-002 bundle after Glazed PR review remediation
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Step 15 reMarkable upload
+

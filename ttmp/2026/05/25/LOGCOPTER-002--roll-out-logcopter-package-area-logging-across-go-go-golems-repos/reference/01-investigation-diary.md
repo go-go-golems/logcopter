@@ -1544,7 +1544,7 @@ logcopter-smoke:
 ```
 
 - Added the smoke target to `.github/workflows/push.yml` before the full test suite.
-- Pushed `task/logcopter` to `origin`.
+- Pushed `task/logcopter` to `origin` and to `wesen`, where PR 581's head branch lives.
 - Replied to and resolved all three PR review threads.
 
 ### Why
@@ -1637,4 +1637,70 @@ PR review threads resolved:
 cmd/glaze/main.go: embedded logcopter docs import
 pkg/cmds/logging/init.go: profile defaults precedence
 pkg/cmds/fields/parse.go: equals before colon parsing
+```
+
+## Step 15: Upload updated LOGCOPTER-002 bundle after PR review remediation
+
+After resolving the PR review threads and recording the remediation diary, I uploaded the refreshed LOGCOPTER-002 bundle to reMarkable.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 14)
+
+**Assistant interpretation:** Keep the external review bundle synchronized after PR review fixes.
+
+**Inferred user intent:** The user wants the ticket bundle to include the smoke-test and review-remediation details.
+
+**Commit (code):** N/A — documentation delivery step.
+
+### What I did
+
+- Uploaded the updated LOGCOPTER-002 bundle to `/ai/2026/05/25/LOGCOPTER-002` with `--force`.
+
+### Why
+
+The previous bundle did not include the Glazed PR 581 review remediation, standalone smoke target, or resolved-thread details.
+
+### What worked
+
+Upload succeeded:
+
+```text
+OK: uploaded LOGCOPTER-002 Cross Repository Logcopter Rollout Guide.pdf -> /ai/2026/05/25/LOGCOPTER-002
+```
+
+### What didn't work
+
+N/A.
+
+### What I learned
+
+N/A.
+
+### What was tricky to build
+
+N/A.
+
+### What warrants a second pair of eyes
+
+N/A.
+
+### What should be done in the future
+
+Watch the PR checks for the new `logcopter-smoke` workflow step.
+
+### Code review instructions
+
+Review the refreshed reMarkable bundle or local ticket docs.
+
+### Technical details
+
+Uploaded bundle inputs:
+
+```text
+index.md
+tasks.md
+changelog.md
+design-doc/01-cross-repository-logcopter-rollout-analysis-and-implementation-guide.md
+reference/01-investigation-diary.md
 ```
