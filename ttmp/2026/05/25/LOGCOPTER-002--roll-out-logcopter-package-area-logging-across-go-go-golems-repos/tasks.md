@@ -52,11 +52,12 @@
 
 ## Phase 4 — Clay rollout
 
-- [ ] Add direct `github.com/go-go-golems/logcopter v0.0.1` dependency.
-- [ ] Generate package loggers with prefix `go-go-golems.clay` for `./pkg/...`.
-- [ ] Convert watcher, repositories, filters, SQL, and workerpool diagnostics.
-- [ ] Keep Clay logging initialization helpers deprecated.
-- [ ] Validate `go test ./pkg/...`.
+- [x] Add direct `github.com/go-go-golems/logcopter v0.0.1` dependency.
+- [x] Generate package loggers with prefix `go-go-golems.clay` for `./pkg/...`.
+- [x] Convert watcher, repositories, filters, SQL, and workerpool diagnostics.
+- [x] Keep Clay logging initialization helpers deprecated.
+- [x] Validate `go test ./pkg/...`.
+- [x] Commit Clay changes (`440a77d`).
 
 ## Phase 5 — Cross-repository validation and docs
 
@@ -68,7 +69,7 @@
 - [ ] Verify one `go-go-golems.glazed...` area can be verbose while default remains quiet.
 - [ ] Verify one `go-go-golems.pinocchio...` area can be configured through Pinocchio CLI.
 - [ ] Verify one `go-go-golems.geppetto...` area can be configured through a Pinocchio command path.
-- [ ] Verify Clay package diagnostics work when called by a Glazed-configured application.
+- [x] Verify Clay package diagnostics/config smoke through a Glazed-configured example application.
 - [ ] Update repository READMEs or help docs with cross-repository area prefix examples.
 - [ ] Update LOGCOPTER-002 diary and changelog after each implementation phase.
 - [ ] Run `docmgr doctor --ticket LOGCOPTER-002 --stale-after 30`.

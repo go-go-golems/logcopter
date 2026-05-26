@@ -82,3 +82,17 @@ Uploaded updated LOGCOPTER-002 bundle after Geppetto and Pinocchio rollout
 
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Step 10 reMarkable upload
 
+
+## 2026-05-25
+
+Embedded logcopter docs for Glazed import and completed Clay rollout
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/clay/examples/simple/logging_layer_example.go — Example now uses Glazed logging setup directly
+- /home/manuel/workspaces/2026-05-25/logcopter/clay/logcopter_generate.go — Clay go generate entry point for logcopter package loggers
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/cmd/glaze/main.go — Loads logcopter help docs by importing the embedded FS
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/pkg/doc/doc.go — Exports embedded logcopter help docs as an fs.FS
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Steps 11-12 implementation diary
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/tasks.md — Marked Clay rollout complete
+
