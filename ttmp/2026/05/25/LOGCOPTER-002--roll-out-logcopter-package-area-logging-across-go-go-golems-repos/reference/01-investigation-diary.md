@@ -1505,3 +1505,136 @@ changelog.md
 design-doc/01-cross-repository-logcopter-rollout-analysis-and-implementation-guide.md
 reference/01-investigation-diary.md
 ```
+
+## Step 14: Address Glazed PR 581 review comments and add standalone smoke coverage
+
+I addressed the three open review threads on `go-go-golems/glazed#581`. One was the earlier request to load logcopter help docs through an imported embedded filesystem; the other two were Codex review findings about config precedence and `TypeKeyValue` parsing. I also added a CI smoke target that runs outside the workspace so future PR checks catch missing published logcopter symbols and embedded-doc wiring issues.
+
+The key behavioral fix is that `--log-config` profile values now remain effective when the user does not explicitly set the corresponding CLI flags. The second fix is that `key=value` parsing now splits on `=` before falling back to `:`, so URL-like values such as `postgres://db:5432/app` are not corrupted.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Address code review comments, and do smoke tests to make sure we catch this, because yo? https://github.com/go-go-golems/glazed/pull/581"
+
+**Assistant interpretation:** Inspect PR 581 review comments, fix the reported issues, add smoke/CI coverage so these regressions are caught, push the branch, and reply/resolve the review threads.
+
+**Inferred user intent:** The user wants the PR review feedback fully handled, including regression tests for the exact failure modes and a standalone smoke path that does not silently rely on the local `go.work` workspace.
+
+**Commit (code):** `a34953f` — "Fix logcopter review issues"
+
+### What I did
+
+- Read PR 581 review comments with `gh`.
+- Confirmed three review threads:
+  - local checkout probing for logcopter docs in `cmd/glaze/main.go`,
+  - profile values being overwritten by default CLI logging settings in `pkg/cmds/logging/init.go`,
+  - equals-style key/value parsing breaking when values contain colons in `pkg/cmds/fields/parse.go`.
+- The embedded-docs comment was already fixed by `e720f81` after logcopter published `v0.1.0` with `pkg/doc.FS`.
+- Changed `InitLoggerFromCobra` to start with an empty direct `LoggingSettings` instead of `DefaultLoggingSettings()`, then apply only changed Cobra flags after profile merge.
+- Changed `ParseAreaOverrides` to prefer `=` before `:` for consistency with key/value parsing.
+- Changed `splitKeyValueArgument` to prefer `=` before `:`.
+- Added a regression test proving a `--log-config` file can set `log-level: warn`, `log-format: json`, `log-file: ...`, and areas without being overwritten by unchanged CLI defaults.
+- Added TypeKeyValue tests for `DATABASE_URL=postgres://db:5432/app`, including through pflag `StringSlice` parsing.
+- Added `make logcopter-smoke`:
+
+```make
+logcopter-smoke:
+	GOWORK=off go test ./cmd/glaze ./pkg/cmds/logging ./pkg/cmds/fields
+	GOWORK=off go run ./cmd/glaze help logcopter-logging-architecture >/tmp/glazed-logcopter-help-smoke.txt
+```
+
+- Added the smoke target to `.github/workflows/push.yml` before the full test suite.
+- Pushed `task/logcopter` to `origin`.
+- Replied to and resolved all three PR review threads.
+
+### Why
+
+The config precedence bug could silently make reusable `--log-config` profiles ineffective unless users also passed CLI flags. The key/value bug could silently corrupt common values like database URLs. The embedded-docs issue could pass in a local workspace while failing in standalone CI or an installed binary. Each needed an explicit test or smoke command that reproduces the exact class of failure.
+
+### What worked
+
+- Targeted tests passed:
+
+```bash
+go test ./pkg/cmds/fields ./pkg/cmds/logging ./cmd/glaze
+```
+
+- Standalone smoke passed:
+
+```bash
+make logcopter-smoke
+```
+
+- Generated logger check passed:
+
+```bash
+make logcopter-check
+```
+
+- The pre-push hook passed tests, lint, gosec, govulncheck, and a GoReleaser snapshot.
+- PR review replies were posted.
+- PR review threads were resolved via GraphQL `resolveReviewThread`.
+
+### What didn't work
+
+N/A for the final implementation. The earlier standalone concern was real: Glazed's embedded-doc import requires logcopter `pkg/doc.FS`, which is only safe after the new logcopter release. By this step, `logcopter v0.1.0` was available and `glazed/go.mod` required it, so `GOWORK=off` smoke tests passed.
+
+### What I learned
+
+A useful smoke test here is not just `go test ./...` in the workspace. It must include `GOWORK=off` so the test sees the published module graph and catches missing exported symbols, wrong versions, or accidental local checkout assumptions.
+
+The config precedence bug is a good example of default-value danger: a direct settings struct with defaults is indistinguishable from user-provided settings unless the merge layer receives only values that were actually changed.
+
+### What was tricky to build
+
+The logging test had to verify format as well as level. Checking only the effective level would catch part of the bug, but not the documented `log-format` precedence. The test now writes through the configured logger to a profile-selected log file and unmarshals the emitted line as JSON.
+
+The key/value parser had to keep colon syntax for existing users while making equals syntax safer for values that naturally contain colons. Preferring `=` first preserves both `app.view:debug` and `DATABASE_URL=postgres://...`.
+
+### What warrants a second pair of eyes
+
+- Review whether `ParseAreaOverrides` should split comma-separated entries more carefully if values with commas are ever needed. For log levels this is fine today, but it is worth noting because `TypeKeyValue` also uses comma-separated `StringSlice` inputs.
+- Review whether `logcopter-smoke` should also run `GOWORK=off go test ./...` eventually. The current smoke is intentionally focused and fast.
+
+### What should be done in the future
+
+- Keep `GOWORK=off` smoke coverage for any PR that imports newly released cross-repo symbols.
+- Consider adding a generic CLI smoke command that intentionally emits one log line from a generated package area for easier black-box area override validation.
+
+### Code review instructions
+
+Review:
+
+```text
+glazed/pkg/cmds/logging/init.go
+glazed/pkg/cmds/logging/logcopter_test.go
+glazed/pkg/cmds/fields/parse.go
+glazed/pkg/cmds/fields/parse_test.go
+glazed/Makefile
+glazed/.github/workflows/push.yml
+```
+
+Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/glazed
+make logcopter-smoke
+go test ./pkg/cmds/fields ./pkg/cmds/logging ./cmd/glaze
+make logcopter-check
+```
+
+### Technical details
+
+Final Glazed commit:
+
+```text
+a34953f Fix logcopter review issues
+```
+
+PR review threads resolved:
+
+```text
+cmd/glaze/main.go: embedded logcopter docs import
+pkg/cmds/logging/init.go: profile defaults precedence
+pkg/cmds/fields/parse.go: equals before colon parsing
+```

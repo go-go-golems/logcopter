@@ -105,3 +105,18 @@ Uploaded updated LOGCOPTER-002 bundle after Clay rollout
 
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Step 13 reMarkable upload
 
+
+## 2026-05-25
+
+Addressed Glazed PR 581 review comments and added standalone logcopter smoke coverage
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/.github/workflows/push.yml — Runs standalone logcopter smoke in CI
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/Makefile — Added GOWORK=off logcopter-smoke target
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/fields/parse.go — Key/value parser now prefers equals before colon
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/fields/parse_test.go — Regression tests cover colon-containing URL values
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/logging/init.go — Only changed Cobra flags override log-config profile values
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/cmds/logging/logcopter_test.go — Regression test verifies profile-selected warn/json/file settings survive unchanged CLI defaults
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Step 14 PR review remediation diary
+
