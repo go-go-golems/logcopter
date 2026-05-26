@@ -15,6 +15,14 @@ topics:
       description: Geppetto LLM inference and agent library
     - slug: pinocchio
       description: Pinocchio CLI and LLM application repository
+    - slug: automation
+      description: automation topic
+    - slug: github
+      description: github topic
+    - slug: cicd
+      description: cicd topic
+    - slug: documentation
+      description: documentation topic
 docTypes:
     - slug: index
       description: index document type
