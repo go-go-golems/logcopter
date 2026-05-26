@@ -31,22 +31,24 @@
 
 ## Phase 2 — Pinocchio rollout
 
-- [ ] Update Pinocchio to a Glazed version containing published logcopter integration.
-- [ ] Add direct `github.com/go-go-golems/logcopter v0.0.1` dependency.
-- [ ] Generate package loggers with prefix `go-go-golems.pinocchio`.
-- [ ] Convert package diagnostics away from global zerolog imports.
-- [ ] Replace touched `clay.InitGlazed` calls with direct Glazed logging setup.
-- [ ] Validate root `pinocchio` command bootstrap.
-- [ ] Validate `web-chat` and `simple-chat-agent` command bootstrap.
+- [x] Update Pinocchio to a Glazed version containing published logcopter integration through the workspace checkout while keeping module dependency compatible with current release state.
+- [x] Add direct `github.com/go-go-golems/logcopter v0.0.1` dependency.
+- [x] Generate package loggers with prefix `go-go-golems.pinocchio`.
+- [x] Convert package diagnostics away from global zerolog imports where generated loggers exist.
+- [x] Replace touched `clay.InitGlazed` calls with direct Glazed logging setup.
+- [x] Validate root `pinocchio` command bootstrap.
+- [x] Validate `web-chat` and `simple-chat-agent` command bootstrap.
+- [x] Commit Pinocchio changes (`c2161fc`).
 
 ## Phase 3 — Geppetto rollout
 
-- [ ] Add direct `github.com/go-go-golems/logcopter v0.0.1` dependency.
-- [ ] Generate package loggers with prefix `go-go-golems.geppetto` for `./pkg/...`.
-- [ ] Convert high-value AI provider packages first.
-- [ ] Convert inference tool/middleware/event packages.
-- [ ] Preserve explicit `zerolog.Logger` injection APIs.
-- [ ] Validate targeted Geppetto package tests.
+- [x] Add direct `github.com/go-go-golems/logcopter v0.0.1` dependency.
+- [x] Generate package loggers with prefix `go-go-golems.geppetto` for `./pkg/...`.
+- [x] Convert high-value AI provider packages first.
+- [x] Convert inference tool/middleware/event packages.
+- [x] Preserve explicit `zerolog.Logger` injection APIs.
+- [x] Validate targeted Geppetto package tests.
+- [x] Commit Geppetto changes (`998f3651`).
 
 ## Phase 4 — Clay rollout
 
@@ -58,6 +60,11 @@
 
 ## Phase 5 — Cross-repository validation and docs
 
+- [x] Write a Glazed help tutorial playbook for converting go-go-golems packages to logcopter.
+- [x] Validate the playbook is discoverable through `glaze help`.
+- [x] Use the playbook to guide the Geppetto rollout.
+- [x] Use the playbook to guide the Pinocchio rollout.
+- [x] Smoke test CLI log configuration with explicit logcopter config files.
 - [ ] Verify one `go-go-golems.glazed...` area can be verbose while default remains quiet.
 - [ ] Verify one `go-go-golems.pinocchio...` area can be configured through Pinocchio CLI.
 - [ ] Verify one `go-go-golems.geppetto...` area can be configured through a Pinocchio command path.

@@ -60,3 +60,16 @@ Uploaded updated LOGCOPTER-002 bundle after Glazed transition
 
 - /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Step 5 reMarkable upload
 
+
+## 2026-05-25
+
+Added Glazed logcopter rollout playbook and ported Geppetto/Pinocchio with config smoke tests
+
+### Related Files
+
+- /home/manuel/workspaces/2026-05-25/logcopter/geppetto/logcopter_generate.go — Geppetto go generate entry point for logcopter package loggers
+- /home/manuel/workspaces/2026-05-25/logcopter/glazed/pkg/doc/tutorials/logcopter-package-rollout-playbook.md — New Glazed tutorial playbook for logcopter migration
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/reference/01-investigation-diary.md — Recorded Steps 6-9 detailed implementation diary
+- /home/manuel/workspaces/2026-05-25/logcopter/logcopter/ttmp/2026/05/25/LOGCOPTER-002--roll-out-logcopter-package-area-logging-across-go-go-golems-repos/tasks.md — Marked playbook
+- /home/manuel/workspaces/2026-05-25/logcopter/pinocchio/logcopter_generate.go — Pinocchio go generate entry point for package and command subpackage loggers
+

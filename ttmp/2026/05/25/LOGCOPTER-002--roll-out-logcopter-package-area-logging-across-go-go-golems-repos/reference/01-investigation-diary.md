@@ -531,3 +531,575 @@ changelog.md
 design-doc/01-cross-repository-logcopter-rollout-analysis-and-implementation-guide.md
 reference/01-investigation-diary.md
 ```
+
+## Step 6: Write the Glazed logcopter rollout playbook
+
+I added a Glazed help tutorial that turns the Glazed transition into a reusable migration playbook for go-go-golems repositories. The tutorial covers dependency setup, Go tool registration, `go generate ./...`, generated-file checks, import conflict handling, smoke tests with `--log-config`, and review guidance.
+
+This was intentionally committed before using the playbook on Geppetto and Pinocchio so the later repository work had a written recipe to follow rather than an implicit sequence of shell commands.
+
+### Prompt Context
+
+**User prompt (verbatim):** "Write a playbook on how to convert a current go-go-golem package to use logcopter, and save as a glazed help entry tutorial. 
+
+Then use that playbook to port geppetto and pinocchio. Also do smoke tests passing in config files and such.
+
+Keep a detailed diary as you work."
+
+**Assistant interpretation:** Add a first-class Glazed tutorial for the migration workflow, then apply it to Geppetto and Pinocchio with config-file smoke tests and detailed ticket documentation.
+
+**Inferred user intent:** The user wants the rollout to produce both code changes and durable operational knowledge that can be reused for future go-go-golems repositories.
+
+**Commit (code):** `77c4d47` — "Add logcopter rollout playbook"
+
+### What I did
+
+- Created `glazed/pkg/doc/tutorials/logcopter-package-rollout-playbook.md`.
+- Used `SectionType: Tutorial` and slug `logcopter-package-rollout-playbook`.
+- Documented the target repository shape:
+  - direct logcopter dependency,
+  - `go get -tool` registration,
+  - `logcopter_generate.go`,
+  - generated package `log` variables,
+  - CI freshness check.
+- Included conversion rules for:
+  - ordinary package diagnostics,
+  - `zlog` aliases for concrete global zerolog logger usage,
+  - `stdlog` aliases for standard library `log`,
+  - preserving explicit `zerolog.Logger` APIs.
+- Added smoke-test examples for `--log-area`, `--log-config`, and strict area validation.
+- Validated discoverability with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/glazed
+go run ./cmd/glaze help logcopter-package-rollout-playbook >/tmp/glaze-logcopter-playbook.txt
+```
+
+### Why
+
+The rollout has enough sharp edges that it should be documented as an operational playbook, not just embedded in a ticket diary. The help entry gives future maintainers a single command-discoverable migration path.
+
+### What worked
+
+- The help entry loaded through the existing Glazed embedded help system.
+- `glaze help logcopter-package-rollout-playbook` rendered the tutorial.
+- The frontmatter style matched existing Glazed tutorial conventions.
+
+### What didn't work
+
+N/A.
+
+### What I learned
+
+The playbook needed to explicitly call out same-package import-name collisions because generated `var log = ...` declarations collide not only with `github.com/rs/zerolog/log`, but also with standard library `log` imports in tests or helper files.
+
+### What was tricky to build
+
+The key writing challenge was not overpromising. The generated package logger pattern is appropriate for package diagnostics, but it should not replace every explicit `zerolog.Logger` value. The tutorial therefore makes logger ownership the central distinction.
+
+### What warrants a second pair of eyes
+
+- Review the playbook's recommendation to generate command packages when useful. The Pinocchio rollout showed that `logcopter-gen` currently generates non-main command subpackages but skips top-level `package main` command directories.
+- Review whether the tutorial should mention that limitation explicitly after more generator behavior is confirmed.
+
+### What should be done in the future
+
+- Consider adding a shorter companion reference page that only lists commands.
+- Consider extending `logcopter-gen` to report skipped main packages so users understand why some command directories do not get `logcopter.go` files.
+
+### Code review instructions
+
+Start with:
+
+```text
+glazed/pkg/doc/tutorials/logcopter-package-rollout-playbook.md
+```
+
+Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/glazed
+go run ./cmd/glaze help logcopter-package-rollout-playbook
+```
+
+### Technical details
+
+The help entry uses these frontmatter keys:
+
+```yaml
+SectionType: Tutorial
+Slug: logcopter-package-rollout-playbook
+Topics:
+- logcopter
+- logging
+- go-go-golems
+- migration
+```
+
+## Step 7: Port Geppetto package diagnostics to logcopter
+
+I applied the new playbook to Geppetto. Geppetto now directly depends on logcopter v0.0.1, registers `logcopter-gen` as a Go tool, uses a root `go:generate` entry point, and has generated package loggers for `./pkg/...` under the prefix `go-go-golems.geppetto`.
+
+The conversion preserved explicit `zerolog.Logger` APIs and request/logger injection points. Package diagnostics moved to generated logcopter variables; concrete global zerolog access was aliased as `zlog` where it was still intentionally needed.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 6)
+
+**Assistant interpretation:** Apply the newly written rollout playbook to Geppetto and commit a validated package logger conversion.
+
+**Inferred user intent:** Geppetto should become logcopter-aware without breaking its explicit logger APIs or AI/inference middleware behavior.
+
+**Commit (code):** `998f3651` — "Adopt logcopter package loggers"
+
+### What I did
+
+- Ran:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/geppetto
+go get github.com/go-go-golems/logcopter@v0.0.1
+go get -tool github.com/go-go-golems/logcopter/cmd/logcopter-gen@v0.0.1
+go mod tidy
+```
+
+- Added `geppetto/logcopter_generate.go`:
+
+```go
+package geppetto
+
+//go:generate go tool logcopter-gen -area-prefix go-go-golems.geppetto -strip-prefix github.com/go-go-golems/geppetto ./pkg/...
+```
+
+- Ran `go generate ./...`.
+- Added Makefile targets:
+  - `logcopter-generate`,
+  - `logcopter-check`.
+- Added a GitHub Actions freshness check with `go tool logcopter-gen ... -check ./pkg/...`.
+- Converted diagnostics in Geppetto packages that previously imported `github.com/rs/zerolog/log`.
+- Preserved concrete logger APIs by aliasing global zerolog package imports as `zlog` in places that still need `zlog.Logger`.
+- Replaced deprecated `clay.InitGlazed(...)` calls in Geppetto examples with direct `logging.AddLoggingSectionToRootCommand(...)` to satisfy the lint hook now that Clay marks that helper deprecated.
+- Fixed a standard library `log` collision in `pkg/embeddings/ollama.go` by converting the close-error diagnostic to generated logcopter logging.
+
+### Why
+
+Geppetto has the densest logging usage in AI provider, inference middleware, events, and helper packages. Converting it exercises the package-diagnostic migration while preserving important explicit logger injection APIs.
+
+### What worked
+
+- `make logcopter-check` passed.
+- `go test ./pkg/...` passed after import collision fixes.
+- `go test ./...` passed.
+- The pre-commit hook passed tests and lint.
+- The final commit succeeded.
+
+### What didn't work
+
+The first package test run failed because my initial mechanical replacement changed `zerolog.Logger` into `zerozlog.Logger` while replacing `log.Logger` uses. Example failure:
+
+```text
+pkg/helpers/log_helpers.go:16:9: undefined: zerozlog
+pkg/helpers/log_helpers.go:43:26: undefined: zerozlog
+```
+
+I fixed this by restoring `zerolog.Logger` and only using `zlog.Logger` for the global zerolog package object.
+
+The same run also exposed that generated logcopter loggers do not implement `log.Ctx(ctx)`:
+
+```text
+pkg/helpers/log_helpers.go:69:6: log.Ctx undefined (type logcopter.Logger has no field or method Ctx)
+```
+
+That call intentionally belongs to the global zerolog package, so I changed it to `zlog.Ctx(ctx)`.
+
+A later package run found a standard library `log` collision:
+
+```text
+pkg/embeddings/logcopter.go:7:5: log already declared through import of package log ("log")
+    pkg/embeddings/ollama.go:8:2: other declaration of log
+```
+
+I resolved it by removing the standard library `log` import and using the generated logcopter logger for the close-error warning.
+
+The first commit attempt also failed lint because the workspace Clay checkout now marks `clay.InitGlazed` as deprecated. I replaced those calls with `logging.AddLoggingSectionToRootCommand` and corrected the argument order after the first replacement attempt used the Clay helper's old `(appName, rootCmd)` order instead of Glazed's `(rootCmd, appName)` order.
+
+### What I learned
+
+A naive string replacement for `log.Logger` is unsafe because it can match the suffix of `zerolog.Logger`. Future migrations should either use an AST-aware rewrite or a regex that excludes `zerolog.Logger`.
+
+I also confirmed that deprecating Clay's logging helper has a useful forcing function: downstream repositories that run staticcheck against the workspace must migrate touched command bootstraps to Glazed directly.
+
+### What was tricky to build
+
+The tricky part was separating three meanings of `log` in the same repository:
+
+1. package diagnostics, which should become generated logcopter `log`,
+2. global zerolog package state, which should become `zlog`,
+3. standard library logging, which should become `stdlog` or a generated logcopter call.
+
+The Geppetto examples also had existing `clay.InitGlazed` calls that were not the direct subject of the package logger conversion, but the local Clay deprecation caused lint to fail until those were replaced.
+
+### What warrants a second pair of eyes
+
+- Review `pkg/helpers/log_helpers.go`, `pkg/inference/fixtures/fixtures.go`, `pkg/inference/middleware/logging_middleware.go`, and `pkg/js/modules/geppetto/module.go` to confirm each retained `zlog.Logger` use really needs the concrete global logger.
+- Review the example command bootstrap changes to ensure `logging.AddLoggingSectionToRootCommand(rootCmd, appName)` is sufficient everywhere `clay.InitGlazed` was previously used.
+
+### What should be done in the future
+
+- Consider whether Geppetto command examples should also get generated package loggers after `logcopter-gen` has a clearer story for `package main` directories.
+- Consider publishing a Glazed version that includes the logcopter logging integration before downstream release tags are cut.
+
+### Code review instructions
+
+Start with:
+
+```text
+geppetto/go.mod
+geppetto/logcopter_generate.go
+geppetto/Makefile
+geppetto/.github/workflows/push.yml
+```
+
+Then review the high-value converted packages:
+
+```text
+geppetto/pkg/helpers/log_helpers.go
+geppetto/pkg/inference/middleware/logging_middleware.go
+geppetto/pkg/inference/fixtures/fixtures.go
+geppetto/pkg/events/event-router.go
+geppetto/pkg/steps/ai/openai/engine_openai.go
+geppetto/pkg/steps/ai/claude/engine_claude.go
+geppetto/pkg/steps/ai/openai_responses/engine.go
+```
+
+Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/geppetto
+make logcopter-check
+go test ./pkg/...
+go test ./...
+make lint
+```
+
+### Technical details
+
+Final commit:
+
+```text
+998f3651 Adopt logcopter package loggers
+```
+
+Key validation commands:
+
+```bash
+make logcopter-check
+go test ./pkg/...
+go test ./...
+make lint
+```
+
+## Step 8: Port Pinocchio package and command subpackage diagnostics to logcopter
+
+I applied the same playbook to Pinocchio. Pinocchio now directly depends on logcopter v0.0.1, registers `logcopter-gen` as a Go tool, and generates package loggers for both `./pkg/...` and non-main command subpackages under `./cmd/...` with prefix `go-go-golems.pinocchio`.
+
+This rollout also replaced the touched Pinocchio command bootstraps that used deprecated `clay.InitGlazed` with direct Glazed logging setup. Top-level `package main` command directories kept their global zerolog imports because the current generator did not emit `logcopter.go` files for those command packages.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 6)
+
+**Assistant interpretation:** Apply the rollout playbook to Pinocchio, including command-adjacent packages, and validate root command bootstraps.
+
+**Inferred user intent:** Pinocchio should be able to configure Pinocchio and downstream Geppetto package areas through Glazed logging flags/config files while retaining safe command behavior.
+
+**Commit (code):** `c2161fc` — "Adopt logcopter package loggers"
+
+### What I did
+
+- Ran:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/pinocchio
+go get github.com/go-go-golems/logcopter@v0.0.1
+go get -tool github.com/go-go-golems/logcopter/cmd/logcopter-gen@v0.0.1
+go mod tidy
+```
+
+- Added `pinocchio/logcopter_generate.go`:
+
+```go
+package pinocchio
+
+//go:generate go tool logcopter-gen -area-prefix go-go-golems.pinocchio -strip-prefix github.com/go-go-golems/pinocchio ./pkg/... ./cmd/...
+```
+
+- Ran `go generate ./...`, which also rebuilt the existing web-chat frontend assets as part of Pinocchio's existing generation pipeline.
+- Added Makefile targets:
+  - `logcopter-generate`,
+  - `logcopter-check`.
+- Added a GitHub Actions freshness check with `go tool logcopter-gen ... -check ./pkg/... ./cmd/...`.
+- Converted generated-package diagnostics away from `github.com/rs/zerolog/log` imports.
+- Kept or restored `github.com/rs/zerolog/log` imports in top-level `package main` command directories that did not receive generated logcopter files.
+- Aliased concrete global zerolog access as `zlog` in `pkg/redisstream/router.go` and `cmd/examples/simple-redis-streaming-inference/main.go`.
+- Aliased standard library `log` as `stdlog` in `cmd/pinocchio/cmds/tokens/helpers.go`.
+- Replaced touched `clay.InitGlazed(...)` calls with `logging.AddLoggingSectionToRootCommand(...)` in:
+  - `cmd/pinocchio/main.go`,
+  - `cmd/web-chat/main.go`,
+  - `cmd/agents/simple-chat-agent/main.go`,
+  - `cmd/examples/simple-chat/main.go`,
+  - `cmd/examples/simple-redis-streaming-inference/main.go`.
+
+### Why
+
+Pinocchio is the first real application-level consumer in the rollout. It verifies that a Glazed-configured CLI can carry package-area logging through Pinocchio packages and imported Geppetto packages.
+
+### What worked
+
+- `make logcopter-check` passed.
+- Targeted command/package tests passed:
+
+```bash
+go test ./pkg/... ./cmd/pinocchio ./cmd/web-chat ./cmd/agents/simple-chat-agent
+```
+
+- Full tests passed:
+
+```bash
+go test ./...
+```
+
+- Lint passed:
+
+```bash
+make lint
+```
+
+- The pre-commit hook passed lint and tests.
+- The final commit succeeded.
+
+### What didn't work
+
+The first targeted test run failed on `cmd/pinocchio/cmds/tokens` because a standard library `log` import collided with the generated package variable:
+
+```text
+cmd/pinocchio/cmds/tokens/logcopter.go:7:5: log already declared through import of package log ("log")
+    cmd/pinocchio/cmds/tokens/helpers.go:8:2: other declaration of log
+```
+
+I fixed that by aliasing the import as `stdlog` and changing `log.Fatalf` to `stdlog.Fatalf`.
+
+The first full test run then failed because top-level `package main` command directories had global zerolog imports removed, but no generated `logcopter.go` files existed in those directories:
+
+```text
+cmd/examples/simple-redis-streaming-inference/main.go:111:2: undefined: log
+```
+
+I restored or retained the global zerolog package for top-level main packages, and in the `simple-redis-streaming-inference` example I routed all references through the existing `zlog` alias.
+
+`make lint` initially failed during `go build ./...` because the root `logcopter_generate.go` used `package main`, which created a root package with no `main` function:
+
+```text
+# github.com/go-go-golems/pinocchio
+runtime.main_main·f: function main is undeclared in the main package
+```
+
+I changed the root generate file to `package pinocchio`. I applied the same lesson to Geppetto by amending its generate file to `package geppetto`.
+
+### What I learned
+
+`logcopter-gen ./cmd/...` currently generates non-main command subpackages but does not give every top-level command entry point a generated logger. The migration must therefore treat main packages separately: keep the global zerolog package there until the generator supports or intentionally documents main-package generation behavior.
+
+I also learned that root `go:generate` files should use the repository package name, not `package main`, unless the repository already has a real main package at the module root.
+
+### What was tricky to build
+
+The hardest part was the mixed command tree. Some `cmd/...` directories are reusable packages and receive generated logcopter files; others are command entry points and remain `package main`. The same import cleanup rule cannot be applied uniformly across both cases.
+
+Pinocchio's `go generate ./...` is also heavy because it runs the existing web-chat frontend build. This is acceptable for the requested `go generate ./...` pattern, but the CI freshness check should use direct `logcopter-gen -check` because it is much faster.
+
+### What warrants a second pair of eyes
+
+- Review which `cmd/...` packages should be generated long-term. The current commit includes non-main command subpackages but not top-level main command packages.
+- Review `cmd/examples/simple-redis-streaming-inference/main.go` because it now consistently uses `zlog` for both global logger state and diagnostics.
+- Review the `clay.InitGlazed` replacements in command roots to ensure no Clay-specific config side effects were assumed.
+
+### What should be done in the future
+
+- Consider narrowing Pinocchio's generation scope if generated loggers in protobuf or SPA helper packages are considered noisy.
+- Consider extending the generator or playbook to explicitly support or skip `package main` with a clear warning.
+
+### Code review instructions
+
+Start with:
+
+```text
+pinocchio/go.mod
+pinocchio/logcopter_generate.go
+pinocchio/Makefile
+pinocchio/.github/workflows/push.yml
+```
+
+Then review command bootstrap and collision fixes:
+
+```text
+pinocchio/cmd/pinocchio/main.go
+pinocchio/cmd/web-chat/main.go
+pinocchio/cmd/agents/simple-chat-agent/main.go
+pinocchio/cmd/pinocchio/cmds/tokens/helpers.go
+pinocchio/pkg/redisstream/router.go
+```
+
+Validate with:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/pinocchio
+make logcopter-check
+go test ./pkg/... ./cmd/pinocchio ./cmd/web-chat ./cmd/agents/simple-chat-agent
+go test ./...
+make lint
+```
+
+### Technical details
+
+Final commit:
+
+```text
+c2161fc Adopt logcopter package loggers
+```
+
+Key validation commands:
+
+```bash
+make logcopter-check
+go test ./pkg/... ./cmd/pinocchio ./cmd/web-chat ./cmd/agents/simple-chat-agent
+go test ./...
+make lint
+```
+
+## Step 9: Smoke test logcopter config files through Geppetto and Pinocchio CLIs
+
+I smoke-tested explicit logcopter config files through Pinocchio and a Geppetto Glazed example. The smoke tests used both `logging:`-wrapped profile files and direct logcopter profile files, plus command-line area overrides and strict area validation.
+
+These tests verify the most important application-level behavior: a Glazed-configured CLI can accept a profile file, configure logcopter areas, and still execute safe help commands without requiring API credentials or network access.
+
+### Prompt Context
+
+**User prompt (verbatim):** (see Step 6)
+
+**Assistant interpretation:** Verify the converted repositories accept explicit logcopter configuration files and area overrides in realistic CLI entry points.
+
+**Inferred user intent:** The user wants more than compile-time validation; they want proof that runtime logging configuration works through application commands.
+
+**Commit (code):** N/A — smoke-test validation step.
+
+### What I did
+
+- Created `/tmp/logcopter-pinocchio.yaml`:
+
+```yaml
+logging:
+  level: warn
+  format: text
+  areas:
+    go-go-golems.pinocchio.pkg.cmds: debug
+    go-go-golems.geppetto.pkg.inference: debug
+```
+
+- Created `/tmp/logcopter-geppetto.yaml`:
+
+```yaml
+logging:
+  level: warn
+  format: text
+  areas:
+    go-go-golems.geppetto.pkg.inference: debug
+    go-go-golems.geppetto.pkg.steps.ai.openai: debug
+```
+
+- Created `/tmp/logcopter-pinocchio-direct.yaml`:
+
+```yaml
+level: warn
+format: json
+areas:
+  go-go-golems.pinocchio.pkg.cmds: debug
+  go-go-golems.geppetto.pkg.inference: debug
+```
+
+- Ran Pinocchio help with wrapped config and explicit CLI area override:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/pinocchio
+go run ./cmd/pinocchio --log-config /tmp/logcopter-pinocchio.yaml --log-area go-go-golems.pinocchio.pkg.cmds=debug help
+```
+
+- Ran Geppetto inference example help with wrapped config and explicit CLI area override:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/geppetto
+go run ./cmd/examples/inference --log-config /tmp/logcopter-geppetto.yaml --log-area go-go-golems.geppetto.pkg.inference=debug help
+```
+
+- Ran Pinocchio help with a direct, unwrapped logcopter config and strict area validation:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/pinocchio
+go run ./cmd/pinocchio --log-config /tmp/logcopter-pinocchio-direct.yaml --strict-log-areas help
+```
+
+- Ran Geppetto inference example help with strict area validation:
+
+```bash
+cd /home/manuel/workspaces/2026-05-25/logcopter/geppetto
+go run ./cmd/examples/inference --log-config /tmp/logcopter-geppetto.yaml --strict-log-areas help
+```
+
+### Why
+
+Compile-time generation checks prove files are fresh, but they do not prove the runtime config path works. These smoke tests verify `--log-config`, `--log-area`, wrapped profiles, direct profiles, and strict area validation through real Cobra/Glazed command roots.
+
+### What worked
+
+All smoke commands completed and rendered help output. The direct and wrapped config file shapes were both accepted.
+
+### What didn't work
+
+I first tried `help topics` as a harmless command target, but both tested CLIs reported it as an unknown help topic while still rendering generic help:
+
+```text
+Unknown help topic [`topics`]
+```
+
+I switched the smoke tests to plain `help`, which is deterministic and supported by both commands.
+
+### What I learned
+
+Plain `help` is a better smoke command than trying to guess a topic slug across applications. It exercises root logging/config initialization without relying on application-specific help content.
+
+### What was tricky to build
+
+The smoke tests rely on the workspace Glazed checkout for the current logcopter integration. The downstream modules still reference currently published Glazed versions in `go.mod`; before cutting downstream releases, a Glazed version containing the logcopter logging integration should be published and then required explicitly.
+
+### What warrants a second pair of eyes
+
+- Review whether the chosen strict areas are sufficient. They validate that known-area registration works for imported packages, but they do not assert visible debug output because the safe help commands do not necessarily emit diagnostics from those exact packages.
+
+### What should be done in the future
+
+- Add small deterministic smoke commands that intentionally emit a package diagnostic from a selected package area, so area overrides can be asserted from output rather than only accepted by config validation.
+
+### Code review instructions
+
+Re-run the smoke tests from the repository roots using the temporary YAML files shown above.
+
+### Technical details
+
+Smoke output files used during this step:
+
+```text
+/tmp/pinocchio-help-smoke.txt
+/tmp/geppetto-inference-help-smoke.txt
+/tmp/pinocchio-strict-help-smoke.txt
+/tmp/geppetto-strict-help-smoke.txt
+```
