@@ -1,11 +1,15 @@
 // Package doc contains embedded Markdown help entries for downstream tools.
 //
-// The package deliberately does not import Glazed. Applications that already
-// depend on Glazed can mount FS with their own help system, while non-Glazed
-// consumers can read the embedded files as a regular fs.FS.
+// Applications that already depend on Glazed can load the documents through
+// AddDocToHelpSystem. Non-Glazed consumers can keep mounting FS directly as a
+// regular fs.FS.
 package doc
 
-import "embed"
+import (
+	"embed"
+
+	"github.com/go-go-golems/glazed/pkg/help"
+)
 
 // FS contains the embedded logcopter help documents.
 //
@@ -14,3 +18,9 @@ import "embed"
 //
 //go:embed topics/*.md tutorials/*.md
 var FS embed.FS
+
+// AddDocToHelpSystem loads the embedded logcopter help documents into a Glazed
+// help system.
+func AddDocToHelpSystem(helpSystem *help.HelpSystem) error {
+	return helpSystem.LoadSectionsFromFS(FS, ".")
+}
