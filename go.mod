@@ -1,6 +1,6 @@
 module github.com/go-go-golems/logcopter
 
-go 1.25.9
+go 1.25.11
 
 require (
 	github.com/go-go-golems/glazed v1.3.6
